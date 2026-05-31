@@ -1,10 +1,10 @@
-import 'dotenv/config';
-import express from 'express';
-import cors from 'cors';
-import { Pool } from 'pg';
-import { z } from 'zod';
-import { APP_NAME } from '@ably-fantasy-world-cup/shared';
-import { fileURLToPath } from 'node:url';
+import "dotenv/config";
+import express from "express";
+import cors from "cors";
+import { Pool } from "pg";
+import { z } from "zod";
+import { APP_NAME } from "@ably-fantasy-world-cup/shared";
+import { fileURLToPath } from "node:url";
 
 const envSchema = z.object({
   API_PORT: z.coerce.number().int().positive().default(4000),
@@ -19,8 +19,8 @@ app.use(express.json());
 
 app.use((req, _res, next) => {
   console.log(`${req.method} ${req.originalUrl}`);
-  if (req.method !== 'GET' && req.body && Object.keys(req.body).length > 0) {
-    console.log('Request body:', JSON.stringify(req.body));
+  if (req.method !== "GET" && req.body && Object.keys(req.body).length > 0) {
+    console.log("Request body:", JSON.stringify(req.body));
   }
   next();
 });
@@ -29,30 +29,34 @@ if (env.DATABASE_URL) {
   app.locals.db = new Pool({ connectionString: env.DATABASE_URL });
 }
 
-app.get('/health', (_req, res) => {
+app.get("/health", (_req, res) => {
   res.json({ ok: true, service: APP_NAME });
 });
 
-app.get('/api/config', (_req, res) => {
+app.get("/api/config", (_req, res) => {
   res.json({
     ok: true,
     service: APP_NAME,
-    environment: process.env.NODE_ENV ?? 'development',
+    environment: process.env.NODE_ENV ?? "development",
     hasDatabase: Boolean(env.DATABASE_URL)
   });
 });
 
-app.post('/api/demo/reset', (_req, res) => {
-  res.status(501).json({ ok: false, error: 'Demo reset is not implemented yet' });
+app.post("/api/demo/reset", (_req, res) => {
+  res
+    .status(501)
+    .json({ ok: false, error: "Demo reset is not implemented yet" });
 });
 
 app.use((_req, res) => {
-  res.status(404).json({ ok: false, error: 'Not Found' });
+  res.status(404).json({ ok: false, error: "Not Found" });
 });
 
 app.use((err, _req, res, _next) => {
   console.error(err);
-  res.status(err?.status ?? 500).json({ ok: false, error: err?.message ?? 'Internal Server Error' });
+  res
+    .status(err?.status ?? 500)
+    .json({ ok: false, error: err?.message ?? "Internal Server Error" });
 });
 
 const PORT = env.API_PORT;
