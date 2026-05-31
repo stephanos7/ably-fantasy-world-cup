@@ -287,8 +287,15 @@ export async function runSeed() {
 
     await client.query(
       `INSERT INTO activity_feed (league_id, user_id, message, payload, created_at)
-       VALUES ($1, $2, $3, $4, now())
-       ON CONFLICT (league_id, user_id, message) DO NOTHING`,
+       SELECT $1, $2, $3, $4::jsonb, now()
+       WHERE NOT EXISTS (
+         SELECT 1
+         FROM activity_feed
+         WHERE league_id = $1
+           AND user_id = $2
+           AND message = $3
+           AND payload = $4::jsonb
+       )`,
       [
         leagueId,
         usersBySlug.stephanos,

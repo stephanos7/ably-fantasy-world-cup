@@ -69,6 +69,12 @@ The frontend may call sync endpoints for initial model state and then merge Live
 
 LiveSync outbox, nodes, notify function, and trigger must match the official Ably Postgres connector schema; do not create a simplified custom schema.
 
+## Schema-first implementation
+
+Before implementing backend flows, verify the current schema can represent the required inputs and state transitions.
+
+If required fields or seed data are missing, stop and propose a focused schema/data PR instead of working around the gap in application code.
+
 Use small, readable modules. Avoid over-abstraction.
 
 ## Commands

@@ -1,6 +1,6 @@
 # Architecture
 
-This reference app will keep Postgres as the source of truth.
+This reference app keeps Postgres as the source of truth.
 
 Planned flow:
 
@@ -10,4 +10,18 @@ Planned flow:
 4. Ably LiveSync publishes database-confirmed changes.
 5. React clients render synced state without calculating fantasy scores or leaderboard rankings.
 
-No product functionality has been implemented yet.
+## Simulated event processing
+
+The simulator represents an upstream sports data source. It is intentionally
+local and deterministic for the demo.
+
+`POST /api/simulator/events` accepts a simulated match event, validates it with
+Zod, and processes it in one backend transaction:
+
+simulated match event -> backend scoring -> Postgres state update -> LiveSync
+outbox rows -> future LiveSync client updates
+
+The backend owns fantasy scoring, fantasy team score updates, leaderboard
+ranking, activity feed generation, and LiveSync outbox writes. React clients
+render database-confirmed state and do not calculate authoritative scores or
+ranks.
