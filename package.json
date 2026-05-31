@@ -1,0 +1,22 @@
+{
+  "name": "ably-fantasy-world-cup",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Public Ably LiveSync fantasy football reference app monorepo.",
+  "type": "module",
+  "scripts": {
+    "dev": "corepack pnpm --parallel --filter web --filter api dev",
+    "build": "corepack pnpm -r --if-present build",
+    "lint": "node scripts/lint.mjs && corepack pnpm -r --if-present lint",
+    "test": "corepack pnpm -r --if-present test",
+    "test:e2e": "node scripts/e2e-placeholder.mjs",
+    "db:migrate": "node db/scripts/migrate.js",
+    "db:seed": "node db/scripts/seed.js",
+    "db:reset": "node db/scripts/reset.js"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "packageManager": "pnpm@9.15.4"
+}

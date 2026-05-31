@@ -1,0 +1,24 @@
+# dependencies
+node_modules/
+.pnpm-store/
+
+# build output
+dist/
+build/
+coverage/
+playwright-report/
+test-results/
+
+# environment
+.env
+.env.*
+!.env.example
+
+# local tooling
+.DS_Store
+*.log
+.vite/
+.turbo/
+
+# database
+db/data/
