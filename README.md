@@ -44,6 +44,8 @@ pnpm dev
 
 The web app runs on `http://localhost:5173` and the API runs on `http://localhost:4000`.
 
+To inspect the local database visually, connect with any Postgres GUI using the local credentials in [docs/local-development.md](docs/local-development.md).
+
 ## Hosted Demo
 
 The hosted demo path is expected to use:

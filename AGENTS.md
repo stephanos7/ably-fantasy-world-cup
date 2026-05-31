@@ -67,6 +67,8 @@ Every state-changing backend flow must update app tables and write the relevant 
 
 The frontend may call sync endpoints for initial model state and then merge LiveSync updates.
 
+LiveSync outbox, nodes, notify function, and trigger must match the official Ably Postgres connector schema; do not create a simplified custom schema.
+
 Use small, readable modules. Avoid over-abstraction.
 
 ## Commands
@@ -100,6 +102,44 @@ pnpm lint
 
 Run e2e:
 pnpm test:e2e
+
+## Ably LiveSync database schema
+
+When working on database migrations or outbox-related code, do not invent or approximate the LiveSync connector schema.
+
+The migration must use the official Ably LiveSync Postgres connector schema for:
+
+- `public.nodes`
+- `public.outbox`
+- `public.outbox_notify()`
+- `public_outbox_trigger`
+
+Before changing these objects, check the official Ably docs:
+
+https://ably.com/docs/livesync/postgres.md
+
+The migration should include a comment with:
+
+- source URL
+- date checked
+- note that the schema matches the official connector docs
+
+Application code may insert outbox rows, but must not set or mutate connector-owned fields such as:
+
+- `locked_by`
+- `lock_expiry`
+- `processed`
+
+Outbox inserts should set only application-owned message fields such as:
+
+- `mutation_id`
+- `channel`
+- `name`
+- `rejected`
+- `data`
+- `headers`
+
+If the official Ably docs differ from the current migration, follow the official docs and explain the change in the PR description.
 
 ## PR expectations
 
