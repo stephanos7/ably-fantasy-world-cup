@@ -7,7 +7,7 @@
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
     "lint": "node scripts/lint.mjs",
-    "test": "node --test src/server.test.js"
+    "test": "node --test"
   },
   "dependencies": {
     "@ably-fantasy-world-cup/shared": "workspace:*",

@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.js"
+    ".": "./src/index.js",
+    "./scoring-rules": "./scoring-rules.js"
   },
   "scripts": {
     "lint": "node scripts/lint.mjs",
