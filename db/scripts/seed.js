@@ -138,6 +138,26 @@ export async function runSeed() {
     }
     const leagueId = leagueRow.id;
 
+    await client.query(
+      `INSERT INTO matches (slug, league_id, home_team, away_team, match_date, status, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6, now(), now())
+       ON CONFLICT (slug)
+       DO UPDATE SET league_id = EXCLUDED.league_id,
+                     home_team = EXCLUDED.home_team,
+                     away_team = EXCLUDED.away_team,
+                     match_date = EXCLUDED.match_date,
+                     status = EXCLUDED.status,
+                     updated_at = now()`,
+      [
+        "france-england",
+        leagueId,
+        "France",
+        "England",
+        "2026-06-14",
+        "scheduled"
+      ]
+    );
+
     for (const slug of ["stephanos", "maria", "andreas", "theo"]) {
       const userId = usersBySlug[slug];
       await client.query(
@@ -199,23 +219,48 @@ export async function runSeed() {
     const squadAssignments = [
       {
         teamSlug: "stephanos-heroes",
-        players: ["mbappe", "kane", "bellingham"]
+        players: [
+          { slug: "mbappe", isCaptain: true },
+          { slug: "kane", isCaptain: false },
+          { slug: "bellingham", isCaptain: false }
+        ]
       },
-      { teamSlug: "maria-mavericks", players: ["saka", "rodri", "bellingham"] },
-      { teamSlug: "andreas-attackers", players: ["kane", "rodri", "mbappe"] },
-      { teamSlug: "theo-tacticians", players: ["saka", "mbappe", "kane"] }
+      {
+        teamSlug: "maria-mavericks",
+        players: [
+          { slug: "saka", isCaptain: false },
+          { slug: "rodri", isCaptain: true },
+          { slug: "bellingham", isCaptain: false }
+        ]
+      },
+      {
+        teamSlug: "andreas-attackers",
+        players: [
+          { slug: "kane", isCaptain: false },
+          { slug: "rodri", isCaptain: false },
+          { slug: "mbappe", isCaptain: false }
+        ]
+      },
+      {
+        teamSlug: "theo-tacticians",
+        players: [
+          { slug: "saka", isCaptain: false },
+          { slug: "mbappe", isCaptain: false },
+          { slug: "kane", isCaptain: true }
+        ]
+      }
     ];
 
     for (const assignment of squadAssignments) {
       const teamId = teamsBySlug[assignment.teamSlug];
-      for (const playerSlug of assignment.players) {
-        const playerId = playersBySlug[playerSlug];
+      for (const player of assignment.players) {
+        const playerId = playersBySlug[player.slug];
         await client.query(
-          `INSERT INTO fantasy_team_players (fantasy_team_id, player_id, joined_at)
-           VALUES ($1, $2, now())
+          `INSERT INTO fantasy_team_players (fantasy_team_id, player_id, is_captain, joined_at)
+           VALUES ($1, $2, $3, now())
            ON CONFLICT (fantasy_team_id, player_id)
-           DO NOTHING`,
-          [teamId, playerId]
+           DO UPDATE SET is_captain = EXCLUDED.is_captain`,
+          [teamId, playerId, player.isCaptain]
         );
       }
     }

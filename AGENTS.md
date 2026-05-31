@@ -124,13 +124,11 @@ The migration should include a comment with:
 - date checked
 - note that the schema matches the official connector docs
 
-Application code may insert outbox rows, but must not set or mutate connector-owned fields such as:
+## LiveSync outbox writes
 
-- `locked_by`
-- `lock_expiry`
-- `processed`
+Application code may insert rows into `public.outbox`, but must not set connector-owned fields.
 
-Outbox inserts should set only application-owned message fields such as:
+Allowed application-owned outbox fields:
 
 - `mutation_id`
 - `channel`
@@ -139,7 +137,14 @@ Outbox inserts should set only application-owned message fields such as:
 - `data`
 - `headers`
 
-If the official Ably docs differ from the current migration, follow the official docs and explain the change in the PR description.
+Do not set:
+
+- `sequence_id`
+- `locked_by`
+- `lock_expiry`
+- `processed`
+
+Use the shared `insertOutboxEvent()` helper for all outbox writes.
 
 ## PR expectations
 
