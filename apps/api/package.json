@@ -7,13 +7,17 @@
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
     "lint": "node scripts/lint.mjs",
-    "test": "node scripts/test.mjs"
+    "test": "node --test src/server.test.js"
   },
   "dependencies": {
     "@ably-fantasy-world-cup/shared": "workspace:*",
+    "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "pg": "^8.16.0",
     "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "supertest": "^7.2.2"
   }
 }
