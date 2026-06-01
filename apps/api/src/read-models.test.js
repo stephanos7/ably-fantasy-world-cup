@@ -1,8 +1,13 @@
 import assert from "node:assert/strict";
 import { afterEach, beforeEach, describe, it } from "node:test";
-import request from "supertest";
-import { app } from "./server.js";
 import { createDatabasePool } from "./db/pool.js";
+import { postSimulatorEvent } from "./http/simulator.js";
+import {
+  getClientTeam,
+  getLeagueActivity,
+  getLeagueLeaderboard,
+  getMatch
+} from "./http/read-models.js";
 import { runReset } from "../../../db/scripts/reset.js";
 
 const databaseUrl = process.env.TEST_DATABASE_URL;
@@ -32,12 +37,9 @@ describe("read model API", { skip: !hasDatabase }, () => {
     process.env.ALLOW_DB_RESET = "true";
     await runReset({ seed: true, databaseUrl });
     pool = createDatabasePool({ databaseUrl });
-    app.locals.db = pool;
   });
 
   afterEach(async () => {
-    delete app.locals.db;
-
     if (pool) {
       await pool.end();
       pool = undefined;
@@ -45,16 +47,14 @@ describe("read model API", { skip: !hasDatabase }, () => {
   });
 
   it("GET /api/leagues/:leagueSlug/leaderboard returns backend-ranked standings", async () => {
-    const response = await request(app)
-      .get("/api/leagues/friends/leaderboard")
-      .expect(200);
+    const response = await getLeagueLeaderboard(pool, { leagueSlug: "friends" });
 
-    assert.deepEqual(response.body.league, {
+    assert.deepEqual(response.league, {
       slug: "friends",
       name: "Friends League"
     });
     assert.deepEqual(
-      response.body.leaderboard.map((entry) => ({
+      response.leaderboard.map((entry) => ({
         rank: entry.rank,
         teamSlug: entry.teamSlug,
         points: entry.points
@@ -69,30 +69,26 @@ describe("read model API", { skip: !hasDatabase }, () => {
   });
 
   it("GET /api/leagues/:leagueSlug/activity returns recent activity", async () => {
-    const response = await request(app)
-      .get("/api/leagues/friends/activity")
-      .expect(200);
+    const response = await getLeagueActivity(pool, { leagueSlug: "friends" });
 
-    assert.equal(response.body.leagueSlug, "friends");
-    assert.equal(response.body.items.length, 1);
-    assert.equal(response.body.items[0].message, "Welcome to the Friends League!");
-    assert.deepEqual(response.body.items[0].payload, { tag: "seed" });
+    assert.equal(response.leagueSlug, "friends");
+    assert.equal(response.items.length, 1);
+    assert.equal(response.items[0].message, "Welcome to the Friends League!");
+    assert.deepEqual(response.items[0].payload, { tag: "seed" });
   });
 
   it("GET /api/clients/:userSlug/team returns team state and squad", async () => {
-    const response = await request(app)
-      .get("/api/clients/stephanos/team")
-      .expect(200);
+    const response = await getClientTeam(pool, { userSlug: "stephanos" });
 
-    assert.deepEqual(response.body.user, {
+    assert.deepEqual(response.user, {
       slug: "stephanos",
       name: "Stephanos"
     });
-    assert.equal(response.body.team.slug, "stephanos-heroes");
-    assert.equal(response.body.team.points, 52);
-    assert.equal(response.body.team.rank, 1);
+    assert.equal(response.team.slug, "stephanos-heroes");
+    assert.equal(response.team.points, 52);
+    assert.equal(response.team.rank, 1);
     assert.deepEqual(
-      response.body.squad.map((player) => ({
+      response.squad.map((player) => ({
         slug: player.slug,
         isCaptain: player.isCaptain
       })),
@@ -105,29 +101,24 @@ describe("read model API", { skip: !hasDatabase }, () => {
   });
 
   it("GET /api/matches/:matchSlug returns match summary and events", async () => {
-    await request(app)
-      .post("/api/simulator/events")
-      .send({
-        matchSlug: "france-england",
-        eventType: "goal",
-        playerSlug: "mbappe",
-        minute: 72
-      })
-      .expect(201);
+    await postSimulatorEvent(pool, {
+      matchSlug: "france-england",
+      eventType: "goal",
+      playerSlug: "mbappe",
+      minute: 72
+    });
 
-    const response = await request(app)
-      .get("/api/matches/france-england")
-      .expect(200);
+    const response = await getMatch(pool, { matchSlug: "france-england" });
 
-    assert.equal(response.body.match.slug, "france-england");
-    assert.equal(response.body.match.homeTeam, "France");
-    assert.equal(response.body.match.awayTeam, "England");
-    assert.equal(response.body.events.length, 1);
+    assert.equal(response.match.slug, "france-england");
+    assert.equal(response.match.homeTeam, "France");
+    assert.equal(response.match.awayTeam, "England");
+    assert.equal(response.events.length, 1);
     assert.deepEqual(
       {
-        eventType: response.body.events[0].eventType,
-        minute: response.body.events[0].minute,
-        playerSlug: response.body.events[0].playerSlug
+        eventType: response.events[0].eventType,
+        minute: response.events[0].minute,
+        playerSlug: response.events[0].playerSlug
       },
       {
         eventType: "goal",
@@ -138,9 +129,21 @@ describe("read model API", { skip: !hasDatabase }, () => {
   });
 
   it("returns 404 for unknown slugs", async () => {
-    await request(app).get("/api/leagues/unknown/leaderboard").expect(404);
-    await request(app).get("/api/leagues/unknown/activity").expect(404);
-    await request(app).get("/api/clients/unknown/team").expect(404);
-    await request(app).get("/api/matches/unknown").expect(404);
+    await assert.rejects(
+      () => getLeagueLeaderboard(pool, { leagueSlug: "unknown" }),
+      /Unknown leagueSlug/
+    );
+    await assert.rejects(
+      () => getLeagueActivity(pool, { leagueSlug: "unknown" }),
+      /Unknown leagueSlug/
+    );
+    await assert.rejects(
+      () => getClientTeam(pool, { userSlug: "unknown" }),
+      /Unknown userSlug/
+    );
+    await assert.rejects(
+      () => getMatch(pool, { matchSlug: "unknown" }),
+      /Unknown matchSlug/
+    );
   });
 });

@@ -1,19 +1,19 @@
 # Neon + Ably LiveSync
 
-This is the supported runtime path for the app. The React app and Express API may run locally, but Postgres must be internet-reachable so the Ably-hosted LiveSync Postgres connector can access it.
+This app has one supported runtime path: Netlify frontend and Functions, Neon Postgres, and the Ably-hosted LiveSync Postgres connector.
 
 ## Required Flow
 
 ```text
-local React app
--> local Express API
+React/Vite frontend
+-> Netlify Functions
 -> Neon Postgres
 -> Ably-hosted LiveSync Postgres connector
 -> Ably
 -> browser clients
 ```
 
-Neon is documented because it provides an internet-reachable Postgres database. The application code only requires `DATABASE_URL` and works with compatible Postgres databases reachable by the Ably-hosted connector.
+Neon is documented because it provides an internet-reachable Postgres database. The application code reads `DATABASE_URL` and works with compatible Postgres databases reachable by the Ably-hosted connector.
 
 ## Setup
 
@@ -48,7 +48,7 @@ pnpm db:inspect
 ABLY_API_KEY=your-ably-api-key
 ```
 
-7. Configure the Ably-hosted Postgres connector against the same Neon database used by the API.
+7. Configure the Ably-hosted Postgres connector against the same Neon database used by Netlify Functions.
 
 The connector expects these objects to already exist:
 
@@ -59,29 +59,25 @@ The connector expects these objects to already exist:
 
 Run migrations before configuring or testing the connector. Do not create these objects manually in the Neon dashboard.
 
-8. Start the API and frontend.
+8. Start Netlify dev.
 
 ```sh
-pnpm dev:api
-pnpm dev:web
+pnpm dev
 ```
 
-9. Open:
+9. Open the local Netlify dev URL and visit:
 
 ```text
-http://localhost:5173/control-room
-http://localhost:5173/league/friends
-http://localhost:5173/client/stephanos
-http://localhost:5173/tv/friends
+/control-room
+/league/friends
+/client/stephanos
+/tv/friends
 ```
 
 10. Click `Mbappé goal` in the control room and confirm the other tabs update without refresh.
 
 ## Runtime Behavior
 
-HTTP is still used for:
-
-- initial leaderboard, activity, team, and match reads
-- simulator actions from the control room
+HTTP is used for initial leaderboard, activity, team, and match reads and for simulator actions from the control room. These requests go to `/api/...` and are served by Netlify Functions through `netlify.toml` redirects.
 
 Live updates must come through Ably LiveSync. Do not use polling to fake realtime behavior.

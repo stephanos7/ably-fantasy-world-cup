@@ -2,11 +2,11 @@
 
 This reference app keeps Postgres as the source of truth.
 
-Planned flow:
+Runtime flow:
 
-1. Simulated match events are submitted to the API.
-2. The backend validates events with Zod.
-3. Backend transactions update app tables and LiveSync outbox records together.
+1. Simulated match events are submitted to Netlify Functions through `/api/...` redirects.
+2. Functions validate events with Zod.
+3. Function transactions update app tables and LiveSync outbox records together.
 4. Ably LiveSync publishes database-confirmed changes.
 5. React clients render synced state without calculating fantasy scores or leaderboard rankings.
 
@@ -18,7 +18,7 @@ local and deterministic for the demo.
 `POST /api/simulator/events` accepts a simulated match event, validates it with
 Zod, and processes it in one backend transaction:
 
-simulated match event -> backend scoring -> Postgres state update -> LiveSync
+simulated match event -> Netlify Function -> backend scoring -> Postgres state update -> LiveSync
 outbox rows -> future LiveSync client updates
 
 The backend owns fantasy scoring, fantasy team score updates, leaderboard

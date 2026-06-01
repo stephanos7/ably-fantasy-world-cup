@@ -28,7 +28,7 @@ Frontend:
 Backend:
 
 - Node.js
-- Express
+- Netlify Functions
 - JavaScript, not TypeScript
 - node-postgres
 - Zod for runtime validation
@@ -38,7 +38,7 @@ Database:
 - Postgres
 - SQL migrations in `db/migrations`
 - internet-reachable Postgres for the app runtime, documented with Neon
-- Docker Postgres is not the supported app path unless used internally for tests
+- Docker Postgres is not the supported app path
 
 Realtime:
 
@@ -80,8 +80,8 @@ Use small, readable modules. Avoid over-abstraction.
 
 This repo supports one app runtime path.
 
-- local or hosted React app
-- local or hosted Express API
+- local Netlify dev or hosted Netlify site
+- Netlify Functions backend
 - internet-reachable Postgres, documented with Neon
 - Ably-hosted LiveSync Postgres connector
 - browser clients subscribed to Ably channels
@@ -93,6 +93,8 @@ Neon is documented because it provides an internet-reachable Postgres database t
 Do not assume the Ably-hosted connector can reach local Docker Postgres on `localhost`.
 
 Do not add HTTP-only fallback mode.
+
+Do not add a standalone Express REST API runtime.
 
 Do not add a self-hosted connector path unless the official Ably connector image and configuration are provided or verified from official Ably docs.
 
@@ -243,7 +245,7 @@ Scoring functions must:
 - accept plain objects using stable slugs where practical
 - avoid database clients
 - avoid SQL row coupling where practical
-- avoid Express request/response objects
+- avoid web framework request/response objects
 - avoid Ably SDK objects
 - avoid React state
 - be covered by Node.js built-in tests
@@ -258,10 +260,8 @@ Never commit secrets.
 The app should use `DATABASE_URL` for the internet-reachable Postgres database used by both the API and the Ably-hosted connector.
 
 ```env
-PORT=4000
 DATABASE_URL=postgresql://USER:PASSWORD@HOST/DB?sslmode=require
 ABLY_API_KEY=your-ably-api-key
-VITE_API_BASE_URL=http://localhost:4000
 ```
 
 `ABLY_API_KEY` is server-side only.
@@ -284,8 +284,8 @@ Required order:
 4. Run `pnpm db:seed`.
 5. Verify `public.outbox`, `public.nodes`, `public.outbox_notify()`, and `public_outbox_trigger` exist.
 6. Configure the Ably-hosted Postgres connector against the same Neon database.
-7. Start the API with the same Neon `DATABASE_URL`.
-8. Start the frontend.
+7. Set Netlify Functions to use the same Neon `DATABASE_URL`.
+8. Run `pnpm dev` locally with Netlify dev or deploy the Netlify site.
 9. Trigger simulator events and verify browser clients update through Ably.
 
 Do not create Neon-specific migrations.
@@ -324,18 +324,6 @@ Run all dev services:
 
 ```bash
 pnpm dev
-```
-
-Run frontend:
-
-```bash
-pnpm dev:web
-```
-
-Run API:
-
-```bash
-pnpm dev:api
 ```
 
 Run migrations:

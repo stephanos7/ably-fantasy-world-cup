@@ -1,8 +1,8 @@
 # Local Development
 
-Local development runs the React app and Express API on your machine, but the database is Neon and realtime delivery is Ably LiveSync.
+Local development runs the React app and Netlify Functions through `netlify dev`. The database is Neon, and realtime delivery is Ably LiveSync.
 
-Docker Postgres is not the supported app path for this Ably LiveSync demo. The supported path is local app services plus an internet-reachable Postgres database that the Ably-hosted connector can reach.
+Docker Postgres is not a supported app path. The Ably-hosted connector must read from an internet-reachable Postgres database.
 
 ## Setup
 
@@ -14,13 +14,11 @@ Docker Postgres is not the supported app path for this Ably LiveSync demo. The s
 cp .env.example .env
 ```
 
-4. Set the required environment variables.
+4. Set the required server-side variables.
 
 ```env
-PORT=4000
 DATABASE_URL=postgresql://USER:PASSWORD@HOST/DB?sslmode=require
 ABLY_API_KEY=your-ably-api-key
-VITE_API_BASE_URL=http://localhost:4000
 ```
 
 5. Install dependencies.
@@ -29,30 +27,24 @@ VITE_API_BASE_URL=http://localhost:4000
 pnpm install
 ```
 
-6. Run migrations against Neon.
+6. Run migrations and seed against Neon.
 
 ```sh
 pnpm db:migrate
-```
-
-7. Seed Neon.
-
-```sh
 pnpm db:seed
 ```
 
-8. Configure the Ably-hosted Postgres connector against the same Neon database in `DATABASE_URL`.
+7. Configure the Ably-hosted Postgres connector against the same Neon database in `DATABASE_URL`.
 
-9. Start the API and frontend.
+8. Start Netlify dev.
 
 ```sh
-pnpm dev:api
-pnpm dev:web
+pnpm dev
 ```
 
 ## Browser Demo
 
-Open these routes in separate tabs:
+Open the local Netlify dev URL and use these routes in separate tabs:
 
 | Route | Purpose |
 | --- | --- |
@@ -60,11 +52,11 @@ Open these routes in separate tabs:
 | `/league/friends` | View backend-ranked league standings and activity. |
 | `/client/stephanos` | View one seeded user's team, squad, rank, score, and activity. |
 | `/tv/friends` | View a larger read-only leaderboard. |
-| `/debug` | Check API, Neon, and Ably LiveSync configuration. |
+| `/debug` | Check Netlify Function, Neon, and Ably LiveSync configuration. |
 
 Click `Mbappé goal` in `/control-room`. The league, client, and TV tabs should update without refresh when the connector is reading outbox rows from the same Neon database.
 
-The frontend uses HTTP for initial state and simulator actions. Subsequent updates must arrive through Ably LiveSync.
+The frontend uses same-origin HTTP for initial state and simulator actions. Subsequent updates must arrive through Ably LiveSync.
 
 ## Database Inspection
 

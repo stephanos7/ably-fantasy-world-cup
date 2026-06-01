@@ -5,10 +5,8 @@
   "description": "Public Ably LiveSync fantasy football reference app monorepo.",
   "type": "module",
   "scripts": {
-    "dev": "corepack pnpm --parallel --filter web --filter api dev",
-    "dev:api": "corepack pnpm --filter api dev",
-    "dev:web": "corepack pnpm --filter web dev",
-    "build": "corepack pnpm -r --if-present build",
+    "dev": "netlify dev --filter web",
+    "build": "netlify build --filter web",
     "lint": "node scripts/lint.mjs && corepack pnpm -r --if-present lint",
     "test": "corepack pnpm -r --if-present test",
     "test:e2e": "node scripts/e2e-placeholder.mjs",
@@ -16,6 +14,9 @@
     "db:seed": "corepack pnpm --filter api exec -- node ../../db/scripts/seed.js",
     "db:reset": "corepack pnpm --filter api exec -- node ../../db/scripts/reset.js",
     "db:inspect": "corepack pnpm --filter api exec -- node ../../db/scripts/inspect.js"
+  },
+  "devDependencies": {
+    "netlify-cli": "^17.38.1"
   },
   "engines": {
     "node": ">=20.0.0",

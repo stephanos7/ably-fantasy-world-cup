@@ -2,7 +2,7 @@
 
 This app is designed to be forked while keeping the same Ably LiveSync teaching path:
 
-simulator input -> Express API -> Postgres transaction -> LiveSync outbox -> Ably -> React views
+simulator input -> Netlify Function -> Postgres transaction -> LiveSync outbox -> Ably -> React views
 
 Keep Postgres as the source of truth. The frontend may change how data looks, but it must not calculate authoritative scores, team totals, or leaderboard ranks.
 

@@ -1,0 +1,55 @@
+[build]
+  command = "corepack pnpm --filter web build"
+  publish = "apps/web/dist"
+  functions = "netlify/functions"
+
+[dev]
+  command = "corepack pnpm --filter web dev"
+  port = 8888
+  targetPort = 5173
+  framework = "#custom"
+
+[[redirects]]
+  from = "/api/config"
+  to = "/.netlify/functions/config"
+  status = 200
+
+[[redirects]]
+  from = "/api/ably/token"
+  to = "/.netlify/functions/ably-token"
+  status = 200
+
+[[redirects]]
+  from = "/api/simulator/events"
+  to = "/.netlify/functions/simulator-events"
+  status = 200
+
+[[redirects]]
+  from = "/api/leagues/:leagueSlug/leaderboard"
+  to = "/.netlify/functions/league-leaderboard?leagueSlug=:leagueSlug"
+  status = 200
+
+[[redirects]]
+  from = "/api/leagues/:leagueSlug/activity"
+  to = "/.netlify/functions/league-activity?leagueSlug=:leagueSlug"
+  status = 200
+
+[[redirects]]
+  from = "/api/clients/:userSlug/team"
+  to = "/.netlify/functions/client-team?userSlug=:userSlug"
+  status = 200
+
+[[redirects]]
+  from = "/api/matches/:matchSlug"
+  to = "/.netlify/functions/match?matchSlug=:matchSlug"
+  status = 200
+
+[[redirects]]
+  from = "/health"
+  to = "/.netlify/functions/health"
+  status = 200
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

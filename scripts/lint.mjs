@@ -7,7 +7,7 @@ const requiredPaths = [
   'db/migrations',
   'docs/architecture.md',
   '.env.example',
-  'docker-compose.yml'
+  'netlify.toml'
 ];
 
 const missing = requiredPaths.filter((path) => !existsSync(path));

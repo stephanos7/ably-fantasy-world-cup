@@ -1,26 +1,45 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import request from "supertest";
-import { app, assertRuntimeEnv } from "./server.js";
+import { assertRuntimeEnv } from "./http/config.js";
+import { handler as healthHandler } from "../../../netlify/functions/health.js";
+import { handler as configHandler } from "../../../netlify/functions/config.js";
+import { handler as ablyTokenHandler } from "../../../netlify/functions/ably-token.js";
 
-describe("API shell", () => {
+async function invoke(handler, { method = "GET", body } = {}) {
+  const response = await handler({
+    httpMethod: method,
+    body: body === undefined ? null : JSON.stringify(body),
+    isBase64Encoded: false,
+    queryStringParameters: {},
+    path: "/"
+  });
+
+  return {
+    ...response,
+    json: JSON.parse(response.body)
+  };
+}
+
+describe("Netlify function shell", () => {
   it("GET /health returns ok", async () => {
-    const response = await request(app).get("/health").expect(200);
+    const response = await invoke(healthHandler);
 
-    assert.equal(response.body.ok, true);
-    assert.equal(response.body.service, "Ably Fantasy World Cup");
-    assert.equal(response.body.livesyncMode, "required");
+    assert.equal(response.statusCode, 200);
+    assert.equal(response.json.ok, true);
+    assert.equal(response.json.service, "Ably Fantasy World Cup");
+    assert.equal(response.json.livesyncMode, "required");
   });
 
   it("GET /api/config returns config object", async () => {
-    const response = await request(app).get("/api/config").expect(200);
+    const response = await invoke(configHandler);
 
-    assert.equal(response.body.ok, true);
-    assert.equal(response.body.service, "Ably Fantasy World Cup");
-    assert.equal(typeof response.body.environment, "string");
-    assert.equal(typeof response.body.database.configured, "boolean");
-    assert.equal(typeof response.body.ably.configured, "boolean");
-    assert.equal(response.body.livesync.mode, "required");
+    assert.equal(response.statusCode, 200);
+    assert.equal(response.json.ok, true);
+    assert.equal(response.json.service, "Ably Fantasy World Cup");
+    assert.equal(typeof response.json.environment, "string");
+    assert.equal(typeof response.json.database.configured, "boolean");
+    assert.equal(typeof response.json.ably.configured, "boolean");
+    assert.equal(response.json.livesync.mode, "required");
   });
 
   it("GET /api/ably/token returns 503 when Ably auth is not configured", async () => {
@@ -28,10 +47,11 @@ describe("API shell", () => {
     delete process.env.ABLY_API_KEY;
 
     try {
-      const response = await request(app).get("/api/ably/token").expect(503);
+      const response = await invoke(ablyTokenHandler);
 
-      assert.equal(response.body.ok, false);
-      assert.match(response.body.error, /Ably token auth is not configured/);
+      assert.equal(response.statusCode, 503);
+      assert.equal(response.json.ok, false);
+      assert.match(response.json.error, /Ably token auth is not configured/);
     } finally {
       if (previousApiKey === undefined) {
         delete process.env.ABLY_API_KEY;
@@ -46,16 +66,17 @@ describe("API shell", () => {
     process.env.ABLY_API_KEY = "app.key:secret";
 
     try {
-      const response = await request(app).get("/api/ably/token").expect(200);
-      const capability = JSON.parse(response.body.capability);
+      const response = await invoke(ablyTokenHandler);
+      const capability = JSON.parse(response.json.capability);
 
-      assert.equal(response.body.keyName, "app.key");
-      assert.equal(typeof response.body.mac, "string");
-      assert.equal(response.body.ttl, 60 * 60 * 1000);
+      assert.equal(response.statusCode, 200);
+      assert.equal(response.json.keyName, "app.key");
+      assert.equal(typeof response.json.mac, "string");
+      assert.equal(response.json.ttl, 60 * 60 * 1000);
       assert.deepEqual(capability["league:*"], ["subscribe"]);
       assert.deepEqual(capability["match:*"], ["subscribe"]);
       assert.equal(capability["team:*"], undefined);
-      assert.equal(JSON.stringify(response.body).includes("app.key:secret"), false);
+      assert.equal(JSON.stringify(response.json).includes("app.key:secret"), false);
     } finally {
       if (previousApiKey === undefined) {
         delete process.env.ABLY_API_KEY;

@@ -1,6 +1,6 @@
 # Troubleshooting
 
-These checks assume `DATABASE_URL` points to the same Neon database used by the local API and the Ably-hosted Postgres connector.
+These checks assume `DATABASE_URL` points to the same Neon database used by Netlify Functions and the Ably-hosted Postgres connector.
 
 ## Neon Has Schema
 
@@ -92,4 +92,4 @@ In DevTools:
 - Network should show Ably WebSocket traffic.
 - The UI should show `LiveSync connected`.
 
-If the UI shows a setup error, confirm `ABLY_API_KEY` is set on the API server and the connector points to the same Neon database as `DATABASE_URL`.
+If the UI shows a setup error, confirm `ABLY_API_KEY` is set for Netlify Functions and the connector points to the same Neon database as `DATABASE_URL`.

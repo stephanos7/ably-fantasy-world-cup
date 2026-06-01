@@ -22,3 +22,6 @@ test-results/
 
 # database
 db/data/
+
+# Local Netlify folder
+.netlify

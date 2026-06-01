@@ -1,10 +1,10 @@
 import { existsSync } from 'node:fs';
 
-const required = ['src/server.js', 'package.json'];
+const required = ['src/http/simulator.js', 'src/scoring/process-match-event.js', 'package.json'];
 const missing = required.filter((path) => !existsSync(new URL(`../${path}`, import.meta.url)));
 
 if (missing.length > 0) {
-  console.error(`API skeleton is missing: ${missing.join(', ')}`);
+  console.error(`API backend modules are missing: ${missing.join(', ')}`);
   process.exit(1);
 }
 

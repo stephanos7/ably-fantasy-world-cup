@@ -1,8 +1,7 @@
 import assert from "node:assert/strict";
 import { afterEach, beforeEach, describe, it } from "node:test";
-import request from "supertest";
-import { app } from "./server.js";
 import { createDatabasePool } from "./db/pool.js";
+import { postSimulatorEvent as processSimulatorEvent } from "./http/simulator.js";
 import { runReset } from "../../../db/scripts/reset.js";
 
 const databaseUrl = process.env.TEST_DATABASE_URL;
@@ -28,7 +27,18 @@ const hasDatabase = await canConnectToDatabase();
 let pool;
 
 function postSimulatorEvent(body) {
-  return request(app).post("/api/simulator/events").send(body);
+  return {
+    async expect(expectedStatus) {
+      try {
+        const result = await processSimulatorEvent(pool, body);
+        assert.equal(expectedStatus, 201);
+        return { body: result };
+      } catch (error) {
+        assert.equal(error.status ?? 500, expectedStatus);
+        return { body: { ok: false, error: error.message } };
+      }
+    }
+  };
 }
 
 async function countRows(tableName) {
@@ -60,12 +70,9 @@ describe("POST /api/simulator/events", { skip: !hasDatabase }, () => {
     process.env.ALLOW_DB_RESET = "true";
     await runReset({ seed: true, databaseUrl });
     pool = createDatabasePool({ databaseUrl });
-    app.locals.db = pool;
   });
 
   afterEach(async () => {
-    delete app.locals.db;
-
     if (pool) {
       await pool.end();
       pool = undefined;

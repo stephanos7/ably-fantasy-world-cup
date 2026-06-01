@@ -1,10 +1,11 @@
 # Ably Fantasy World Cup
 
-A public, forkable Ably reference app for a fantasy football experience powered by Neon Postgres and Ably LiveSync.
+A public, forkable Ably reference app for a fantasy football experience powered by Netlify, Neon Postgres, and Ably LiveSync.
 
 ## What This App Demonstrates
 
 - Simulated match events enter the backend as inputs.
+- Netlify Functions update Neon Postgres inside transactions.
 - Postgres stores the confirmed application state.
 - Backend transactions update app tables and write LiveSync outbox records together.
 - Ably LiveSync distributes database-confirmed state to React clients.
@@ -15,39 +16,33 @@ HTTP is used for initial reads and simulator actions only. Realtime updates are 
 ## Quick Start
 
 1. Create a Neon database and copy its Postgres connection string with `sslmode=require`.
-2. Copy `.env.example` to `.env` and set `DATABASE_URL`, `ABLY_API_KEY`, and `VITE_API_BASE_URL`.
-3. Run migrations and seed against Neon.
-4. Create an Ably app.
-5. Configure the Ably-hosted LiveSync Postgres connector against the same Neon database.
-6. Start the API and frontend.
-7. Open multiple browser tabs and trigger a simulator event.
+2. Copy `.env.example` to `.env` and set `DATABASE_URL`.
+3. Run `pnpm db:migrate`.
+4. Run `pnpm db:seed`.
+5. Create an Ably app.
+6. Configure the Ably-hosted LiveSync Postgres connector against the same Neon database.
+7. Set `ABLY_API_KEY` in `.env`.
+8. Run `pnpm dev`.
+9. Open the local Netlify dev URL.
+10. Open `/control-room`, `/league/friends`, `/client/stephanos`, and `/tv/friends`.
+11. Trigger `Mbappé goal`.
+12. Confirm the other pages update without refresh.
 
 ```sh
 pnpm install
 cp .env.example .env
 pnpm db:migrate
 pnpm db:seed
-pnpm dev:api
-pnpm dev:web
+pnpm dev
 ```
 
-The web app runs on `http://localhost:5173` and the API runs on `http://localhost:4000`.
-
-Seeded demo routes:
-
-- `http://localhost:5173/control-room`
-- `http://localhost:5173/league/friends`
-- `http://localhost:5173/client/stephanos`
-- `http://localhost:5173/tv/friends`
-- `http://localhost:5173/debug`
-
-Open `/control-room`, `/league/friends`, `/client/stephanos`, and `/tv/friends` in separate tabs. Click `Mbappé goal` in the control room and confirm the other tabs update without refresh.
+By default, `pnpm dev` runs `netlify dev`. The frontend uses same-origin `/api/...` requests that Netlify redirects to Functions.
 
 ## Required Runtime Path
 
 ```text
-React app
--> Express API
+React/Vite frontend
+-> Netlify Functions
 -> Neon Postgres
 -> Ably-hosted LiveSync Postgres connector
 -> Ably
@@ -56,18 +51,17 @@ React app
 
 The app requires:
 
-- `DATABASE_URL` pointing to an internet-reachable Postgres database, documented with Neon.
-- `ABLY_API_KEY` on the API server for browser-safe Ably token auth.
-- The Ably-hosted Postgres connector configured against the same database as the API.
+- `DATABASE_URL` pointing to the Neon database used by Netlify Functions and the Ably-hosted connector.
+- `ABLY_API_KEY` available only to Netlify Functions for browser-safe Ably token auth.
+- The Ably-hosted Postgres connector configured against the same Neon database.
 
-Docker Postgres is not the supported app path for this Ably LiveSync demo. It may exist only for internal experimentation or test infrastructure.
+Docker Postgres, a standalone REST API server, Render API deployment, and HTTP-only local mode are not supported runtime paths.
 
 ## Commands
 
 ```sh
 pnpm dev
-pnpm dev:api
-pnpm dev:web
+pnpm build
 pnpm db:migrate
 pnpm db:seed
 pnpm db:inspect
@@ -83,8 +77,10 @@ pnpm test:e2e
 
 ```text
 apps/
-  api/      Express API service
+  api/      Shared backend modules for Netlify Functions
   web/      React + Vite web client
+netlify/
+  functions/
 packages/
   shared/   Shared JavaScript constants and schemas
 db/
@@ -95,7 +91,7 @@ docs/
 
 ## Documentation
 
-- [Local development with Neon and Ably](docs/local-development.md)
+- [Local development](docs/local-development.md)
 - [Neon + Ably LiveSync setup](docs/local-livesync-neon.md)
 - [Ably LiveSync connector setup](docs/setup-ably-livesync.md)
 - [Ably LiveSync details](docs/livesync.md)

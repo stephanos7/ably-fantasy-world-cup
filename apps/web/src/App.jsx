@@ -384,7 +384,7 @@ function LiveSyncFlowExplanation() {
               <InstructionStep
                 step="1"
                 title="Simulator input"
-                description="The Control Room posts a seeded match event to the Express API."
+                description="The Control Room posts a seeded match event to a Netlify Function."
               />
             </Grid>
             <Grid size={{ xs: 12, md: 3 }}>
