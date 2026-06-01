@@ -145,7 +145,11 @@ describe("POST /api/simulator/events", { skip: !hasDatabase }, () => {
         .slice(2, -1)
         .map((row) => row.channel)
         .sort(),
-      ["team:andreas", "team:stephanos", "team:theo"]
+      [
+        "league:friends:teams",
+        "league:friends:teams",
+        "league:friends:teams"
+      ]
     );
   });
 
@@ -182,9 +186,140 @@ describe("POST /api/simulator/events", { skip: !hasDatabase }, () => {
 
     const outboxRows = await getOutboxRows();
     assert.equal(
-      outboxRows.some((row) => row.channel === "team:maria"),
+      outboxRows.some(
+        (row) =>
+          row.channel === "league:friends:teams" &&
+          row.name === "team.updated" &&
+          row.data.userSlug === "maria"
+      ),
       false
     );
+  });
+
+  it("emits complete LiveSync model updates for one simulator mutation", async () => {
+    const response = await postSimulatorEvent({
+      matchSlug: "france-england",
+      eventType: "goal",
+      playerSlug: "mbappe",
+      minute: 72
+    }).expect(201);
+
+    const outboxRows = await getOutboxRows();
+    const mutationId = `simulator:${response.body.event.id}`;
+
+    assert.equal(outboxRows.length, 6);
+    assert.deepEqual(
+      response.body.outboxMessages.map((message) => ({
+        hasSequenceId: typeof message.sequenceId === "number",
+        channel: message.channel,
+        name: message.name
+      })),
+      outboxRows.map((row) => ({
+        hasSequenceId: true,
+        channel: row.channel,
+        name: row.name
+      }))
+    );
+    assert.deepEqual(
+      [...new Set(outboxRows.map((row) => row.mutationId))],
+      [mutationId]
+    );
+    assert.deepEqual(
+      outboxRows
+        .map((row) => `${row.channel} / ${row.name}`)
+        .sort(),
+      [
+        "league:friends:activity / activity.created",
+        "league:friends:leaderboard / leaderboard.updated",
+        "league:friends:teams / team.updated",
+        "league:friends:teams / team.updated",
+        "league:friends:teams / team.updated",
+        "match:france-england / match.updated"
+      ]
+    );
+
+    const rowsByEvent = new Map(
+      outboxRows.map((row) => [`${row.channel}:${row.name}`, row])
+    );
+    const leaderboardRow = rowsByEvent.get(
+      "league:friends:leaderboard:leaderboard.updated"
+    );
+    const activityRow = rowsByEvent.get(
+      "league:friends:activity:activity.created"
+    );
+    const teamRows = outboxRows.filter(
+      (row) =>
+        row.channel === "league:friends:teams" && row.name === "team.updated"
+    );
+    const stephanosTeamRow = teamRows.find(
+      (row) => row.data.userSlug === "stephanos"
+    );
+    const matchRow = rowsByEvent.get("match:france-england:match.updated");
+
+    assert.ok(leaderboardRow);
+    assert.ok(activityRow);
+    assert.ok(stephanosTeamRow);
+    assert.ok(matchRow);
+    assert.deepEqual(
+      teamRows.map((row) => row.data.userSlug).sort(),
+      ["andreas", "stephanos", "theo"]
+    );
+    assert.equal(
+      teamRows.some((row) => row.data.userSlug === "maria"),
+      false
+    );
+
+    assert.equal(leaderboardRow.data.leagueSlug, "friends");
+    assert.equal(Array.isArray(leaderboardRow.data.leaderboard), true);
+    assert.equal(
+      leaderboardRow.data.leaderboard.some(
+        (entry) =>
+          entry.teamSlug === "stephanos-heroes" &&
+          entry.points === 62 &&
+          entry.rank === 1
+      ),
+      true
+    );
+
+    assert.equal(activityRow.data.leagueSlug, "friends");
+    assert.equal(Array.isArray(activityRow.data.items), true);
+    assert.equal(activityRow.data.items.length, 3);
+    assert.equal(
+      activityRow.data.items.some(
+        (item) =>
+          item.teamSlug === "stephanos-heroes" &&
+          item.userSlug === "stephanos" &&
+          item.pointsDelta === 10 &&
+          item.matchSlug === "france-england" &&
+          item.minute === 72
+      ),
+      true
+    );
+
+    assert.deepEqual(stephanosTeamRow.data, {
+      userSlug: "stephanos",
+      teamSlug: "stephanos-heroes",
+      teamName: "Stephanos Heroes",
+      points: 62,
+      rank: 1,
+      lastEvent: {
+        eventType: "goal",
+        playerSlug: "mbappe",
+        playerName: "Kylian Mbappé",
+        pointsDelta: 10,
+        minute: 72
+      }
+    });
+
+    assert.deepEqual(matchRow.data, {
+      matchSlug: "france-england",
+      lastEvent: {
+        eventType: "goal",
+        playerSlug: "mbappe",
+        playerName: "Kylian Mbappé",
+        minute: 72
+      }
+    });
   });
 
   it("scores assist events", async () => {

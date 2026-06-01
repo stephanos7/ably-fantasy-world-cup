@@ -175,17 +175,14 @@ Channel patterns:
 
 - `league:{leagueSlug}:leaderboard`
 - `league:{leagueSlug}:activity`
-- `team:{userSlug}`
+- `league:{leagueSlug}:teams`
 - `match:{matchSlug}`
 
 Seeded demo examples:
 
 - `league:friends:leaderboard`
 - `league:friends:activity`
-- `team:stephanos`
-- `team:maria`
-- `team:andreas`
-- `team:theo`
+- `league:friends:teams`
 - `match:france-england`
 
 Event names:

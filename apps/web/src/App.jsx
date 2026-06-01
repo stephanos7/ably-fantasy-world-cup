@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Alert,
   AppBar,
@@ -29,9 +29,16 @@ import {
   Toolbar,
   Typography,
   createTheme
-} from '@mui/material';
-import { Link as RouterLink, NavLink, Outlet, Route, Routes, useParams } from 'react-router-dom';
-import { APP_NAME } from '@ably-fantasy-world-cup/shared';
+} from "@mui/material";
+import {
+  Link as RouterLink,
+  NavLink,
+  Outlet,
+  Route,
+  Routes,
+  useParams
+} from "react-router-dom";
+import { APP_NAME } from "@ably-fantasy-world-cup/shared";
 import {
   apiBaseUrl,
   getApiConfig,
@@ -41,66 +48,89 @@ import {
   getLeagueActivity,
   getMatch,
   postSimulatorEvent
-} from './api/client.js';
-import { createLiveSyncClient } from './api/livesync.js';
+} from "./api/client.js";
+import { createLiveSyncClient } from "./api/livesync.js";
 
-const demoLeagueSlug = 'friends';
-const demoUserSlug = 'stephanos';
-const demoMatchSlug = 'france-england';
+const demoLeagueSlug = "friends";
+const demoUserSlug = "stephanos";
+const demoMatchSlug = "france-england";
 
 const navItems = [
-  { label: 'Launcher', to: '/' },
-  { label: 'Control Room', to: '/control-room' },
-  { label: 'Client', to: `/client/${demoUserSlug}` },
-  { label: 'League', to: `/league/${demoLeagueSlug}` },
-  { label: 'TV', to: `/tv/${demoLeagueSlug}` },
-  { label: 'Debug', to: '/debug' }
+  { label: "Launcher", to: "/" },
+  { label: "Control Room", to: "/control-room" },
+  { label: "Client", to: `/client/${demoUserSlug}` },
+  { label: "League", to: `/league/${demoLeagueSlug}` },
+  { label: "TV", to: `/tv/${demoLeagueSlug}` },
+  { label: "Debug", to: "/debug" }
 ];
 
 const launcherCards = [
   {
-    title: 'Control Room',
-    route: '/control-room',
-    description: 'Start here. Trigger simulated match events and inspect the backend transaction response.'
+    title: "Control Room",
+    route: "/control-room",
+    description:
+      "Start here. Trigger simulated match events and inspect the backend transaction response."
   },
   {
-    title: 'Client View',
+    title: "Client View",
     route: `/client/${demoUserSlug}`,
-    description: 'Keep this open beside the Control Room to watch one manager receive LiveSync updates.'
+    description:
+      "Keep this open beside the Control Room to watch one manager receive LiveSync updates."
   },
   {
-    title: 'League Table',
+    title: "League Table",
     route: `/league/${demoLeagueSlug}`,
-    description: 'Watch the backend-ranked Friends League leaderboard update from database-confirmed state.'
+    description:
+      "Watch the backend-ranked Friends League leaderboard update from database-confirmed state."
   },
   {
-    title: 'TV Mode',
+    title: "TV Mode",
     route: `/tv/${demoLeagueSlug}`,
-    description: 'Open a presentation-friendly leaderboard display.'
+    description: "Open a presentation-friendly leaderboard display."
   },
   {
-    title: 'Debug',
-    route: '/debug',
-    description: 'Check API connectivity and available demo routes.'
+    title: "Debug",
+    route: "/debug",
+    description: "Check API connectivity and available demo routes."
   }
 ];
 
 const simulatorActions = [
   {
-    label: 'Mbappé goal',
-    payload: { matchSlug: demoMatchSlug, eventType: 'goal', playerSlug: 'mbappe', minute: 72 }
+    label: "Mbappé goal",
+    payload: {
+      matchSlug: demoMatchSlug,
+      eventType: "goal",
+      playerSlug: "mbappe",
+      minute: 72
+    }
   },
   {
-    label: 'Kane goal',
-    payload: { matchSlug: demoMatchSlug, eventType: 'goal', playerSlug: 'kane', minute: 73 }
+    label: "Kane goal",
+    payload: {
+      matchSlug: demoMatchSlug,
+      eventType: "goal",
+      playerSlug: "kane",
+      minute: 73
+    }
   },
   {
-    label: 'Bellingham assist',
-    payload: { matchSlug: demoMatchSlug, eventType: 'assist', playerSlug: 'bellingham', minute: 75 }
+    label: "Bellingham assist",
+    payload: {
+      matchSlug: demoMatchSlug,
+      eventType: "assist",
+      playerSlug: "bellingham",
+      minute: 75
+    }
   },
   {
-    label: 'Saka yellow card',
-    payload: { matchSlug: demoMatchSlug, eventType: 'yellow_card', playerSlug: 'saka', minute: 80 }
+    label: "Saka yellow card",
+    payload: {
+      matchSlug: demoMatchSlug,
+      eventType: "yellow_card",
+      playerSlug: "saka",
+      minute: 80
+    }
   }
 ];
 
@@ -109,38 +139,40 @@ function createAppTheme(mode) {
     palette: {
       mode,
       primary: {
-        main: mode === 'light' ? '#007a5a' : '#32d6a0'
+        main: mode === "light" ? "#007a5a" : "#32d6a0"
       },
       secondary: {
-        main: mode === 'light' ? '#2855a7' : '#8fb4ff'
+        main: mode === "light" ? "#2855a7" : "#8fb4ff"
       },
       warning: {
-        main: '#d17a00'
+        main: "#d17a00"
       },
       background: {
-        default: mode === 'light' ? '#f5f7f8' : '#111418',
-        paper: mode === 'light' ? '#ffffff' : '#1a2027'
+        default: mode === "light" ? "#f5f7f8" : "#111418",
+        paper: mode === "light" ? "#ffffff" : "#1a2027"
       }
     },
     shape: {
       borderRadius: 8
     },
     typography: {
-      fontFamily: ['Inter', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'].join(','),
+      fontFamily: ["Inter", "Roboto", "Helvetica", "Arial", "sans-serif"].join(
+        ","
+      ),
       h1: {
-        fontSize: '2.5rem',
+        fontSize: "2.5rem",
         fontWeight: 700
       },
       h2: {
-        fontSize: '1.75rem',
+        fontSize: "1.75rem",
         fontWeight: 700
       },
       h3: {
-        fontSize: '1.25rem',
+        fontSize: "1.25rem",
         fontWeight: 700
       },
       button: {
-        textTransform: 'none',
+        textTransform: "none",
         fontWeight: 700
       }
     },
@@ -164,20 +196,24 @@ function createAppTheme(mode) {
 }
 
 export function App() {
-  const [mode, setMode] = useState(() => window.localStorage.getItem('themeMode') || 'light');
+  const [mode, setMode] = useState(
+    () => window.localStorage.getItem("themeMode") || "light"
+  );
   const theme = useMemo(() => createAppTheme(mode), [mode]);
 
   function handleModeChange(event) {
-    const nextMode = event.target.checked ? 'dark' : 'light';
+    const nextMode = event.target.checked ? "dark" : "light";
     setMode(nextMode);
-    window.localStorage.setItem('themeMode', nextMode);
+    window.localStorage.setItem("themeMode", nextMode);
   }
 
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Routes>
-        <Route element={<RouteLayout mode={mode} onModeChange={handleModeChange} />}>
+        <Route
+          element={<RouteLayout mode={mode} onModeChange={handleModeChange} />}
+        >
           <Route index element={<DemoLauncherPage />} />
           <Route path="control-room" element={<ControlRoomPage />} />
           <Route path="client/:userSlug" element={<ClientPage />} />
@@ -193,7 +229,7 @@ export function App() {
 
 function RouteLayout({ mode, onModeChange }) {
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
+    <Box sx={{ minHeight: "100vh", bgcolor: "background.default" }}>
       <AppHeader mode={mode} onModeChange={onModeChange} />
       <Container component="main" maxWidth="lg" sx={{ py: { xs: 3, md: 4 } }}>
         <Outlet />
@@ -210,20 +246,20 @@ function AppHeader({ mode, onModeChange }) {
       elevation={0}
       sx={{
         borderBottom: 1,
-        borderColor: 'divider',
-        bgcolor: 'background.paper'
+        borderColor: "divider",
+        bgcolor: "background.paper"
       }}
     >
-      <Toolbar sx={{ gap: 2, alignItems: 'center', flexWrap: 'wrap', py: 1 }}>
+      <Toolbar sx={{ gap: 2, alignItems: "center", flexWrap: "wrap", py: 1 }}>
         <Typography
           component={RouterLink}
           to="/"
           variant="h6"
           sx={{
-            color: 'text.primary',
+            color: "text.primary",
             fontWeight: 800,
             mr: { xs: 0, md: 2 },
-            textDecoration: 'none'
+            textDecoration: "none"
           }}
         >
           {APP_NAME}
@@ -235,8 +271,8 @@ function AppHeader({ mode, onModeChange }) {
           spacing={0.5}
           sx={{
             flex: 1,
-            minWidth: { xs: '100%', md: 0 },
-            overflowX: 'auto',
+            minWidth: { xs: "100%", md: 0 },
+            overflowX: "auto",
             order: { xs: 3, md: 2 },
             pb: { xs: 0.5, md: 0 }
           }}
@@ -246,15 +282,15 @@ function AppHeader({ mode, onModeChange }) {
               key={item.to}
               component={NavLink}
               to={item.to}
-              end={item.to === '/'}
+              end={item.to === "/"}
               size="small"
               sx={{
-                color: 'text.secondary',
-                flex: '0 0 auto',
-                whiteSpace: 'nowrap',
-                '&.active': {
-                  color: 'primary.main',
-                  bgcolor: 'action.selected'
+                color: "text.secondary",
+                flex: "0 0 auto",
+                whiteSpace: "nowrap",
+                "&.active": {
+                  color: "primary.main",
+                  bgcolor: "action.selected"
                 }
               }}
             >
@@ -264,9 +300,9 @@ function AppHeader({ mode, onModeChange }) {
         </Stack>
 
         <FormControlLabel
-          control={<Switch checked={mode === 'dark'} onChange={onModeChange} />}
-          label={mode === 'dark' ? 'Dark' : 'Light'}
-          sx={{ ml: 'auto', order: { xs: 2, md: 3 } }}
+          control={<Switch checked={mode === "dark"} onChange={onModeChange} />}
+          label={mode === "dark" ? "Dark" : "Light"}
+          sx={{ ml: "auto", order: { xs: 2, md: 3 } }}
         />
       </Toolbar>
     </AppBar>
@@ -319,8 +355,15 @@ function DemoLauncherPage() {
 
       <Grid container spacing={2}>
         {launcherCards.map((card) => (
-          <Grid key={card.route} size={{ xs: 12, md: card.title === 'Debug' ? 12 : 6 }}>
-            <CardAction title={card.title} route={card.route} description={card.description} />
+          <Grid
+            key={card.route}
+            size={{ xs: 12, md: card.title === "Debug" ? 12 : 6 }}
+          >
+            <CardAction
+              title={card.title}
+              route={card.route}
+              description={card.description}
+            />
           </Grid>
         ))}
       </Grid>
@@ -374,8 +417,13 @@ function LiveSyncFlowExplanation() {
 
 function InstructionStep({ step, title, description }) {
   return (
-    <Stack spacing={1} sx={{ height: '100%' }}>
-      <Chip label={step} color="primary" size="small" sx={{ alignSelf: 'flex-start', fontWeight: 800 }} />
+    <Stack spacing={1} sx={{ height: "100%" }}>
+      <Chip
+        label={step}
+        color="primary"
+        size="small"
+        sx={{ alignSelf: "flex-start", fontWeight: 800 }}
+      />
       <Typography component="h3" variant="h3">
         {title}
       </Typography>
@@ -386,7 +434,7 @@ function InstructionStep({ step, title, description }) {
 
 function CardAction({ title, route, description }) {
   return (
-    <Card variant="outlined" sx={{ height: '100%' }}>
+    <Card variant="outlined" sx={{ height: "100%" }}>
       <CardContent>
         <Stack spacing={2}>
           <Typography component="h2" variant="h3">
@@ -409,7 +457,10 @@ function ControlRoomPage() {
   const [submitError, setSubmitError] = useState(null);
   const [pendingAction, setPendingAction] = useState(null);
   const matchState = useAsyncData(() => getMatch(demoMatchSlug), []);
-  const activityState = useAsyncData(() => getLeagueActivity(demoLeagueSlug), []);
+  const activityState = useAsyncData(
+    () => getLeagueActivity(demoLeagueSlug),
+    []
+  );
 
   async function handleSimulatorAction(action) {
     setPendingAction(action.label);
@@ -445,10 +496,16 @@ function ControlRoomPage() {
                   Send simulator event
                 </Typography>
                 <Typography color="text.secondary">
-                  These buttons are inputs, not final state. The API validates the event, recalculates scores and
-                  ranks, writes Postgres tables, and inserts LiveSync outbox rows in the same transaction.
+                  These buttons are inputs, not final state. The API validates
+                  the event, recalculates scores and ranks, writes Postgres
+                  tables, and inserts LiveSync outbox rows in the same
+                  transaction.
                 </Typography>
-                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} flexWrap="wrap">
+                <Stack
+                  direction={{ xs: "column", sm: "row" }}
+                  spacing={1}
+                  flexWrap="wrap"
+                >
                   {simulatorActions.map((action) => (
                     <Button
                       key={action.label}
@@ -456,7 +513,9 @@ function ControlRoomPage() {
                       onClick={() => handleSimulatorAction(action)}
                       disabled={Boolean(pendingAction)}
                     >
-                      {pendingAction === action.label ? 'Sending...' : action.label}
+                      {pendingAction === action.label
+                        ? "Sending..."
+                        : action.label}
                     </Button>
                   ))}
                 </Stack>
@@ -466,24 +525,46 @@ function ControlRoomPage() {
                     Watch the result
                   </Typography>
                   <Typography color="text.secondary">
-                    Open the live views below in separate tabs before clicking an event. Their scores and ranks come
-                    from LiveSync messages, not frontend calculations.
+                    Open the live views below in separate tabs before clicking
+                    an event. Their scores and ranks come from LiveSync
+                    messages, not frontend calculations.
                   </Typography>
-                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} flexWrap="wrap">
-                    <Button component={RouterLink} to={`/client/${demoUserSlug}`} variant="outlined">
+                  <Stack
+                    direction={{ xs: "column", sm: "row" }}
+                    spacing={1}
+                    flexWrap="wrap"
+                  >
+                    <Button
+                      component={RouterLink}
+                      to={`/client/${demoUserSlug}`}
+                      variant="outlined"
+                    >
                       Open client tab
                     </Button>
-                    <Button component={RouterLink} to={`/league/${demoLeagueSlug}`} variant="outlined">
+                    <Button
+                      component={RouterLink}
+                      to={`/league/${demoLeagueSlug}`}
+                      variant="outlined"
+                    >
                       Open league tab
                     </Button>
-                    <Button component={RouterLink} to={`/tv/${demoLeagueSlug}`} variant="outlined">
+                    <Button
+                      component={RouterLink}
+                      to={`/tv/${demoLeagueSlug}`}
+                      variant="outlined"
+                    >
                       Open TV tab
                     </Button>
                   </Stack>
                 </Stack>
                 <Divider />
-                <AsyncBlock state={matchState} emptyMessage="No match summary available.">
-                  {(data) => <MatchSummary match={data.match} events={data.events} />}
+                <AsyncBlock
+                  state={matchState}
+                  emptyMessage="No match summary available."
+                >
+                  {(data) => (
+                    <MatchSummary match={data.match} events={data.events} />
+                  )}
                 </AsyncBlock>
               </Stack>
             </CardContent>
@@ -499,8 +580,9 @@ function ControlRoomPage() {
                     Latest API response
                   </Typography>
                   <Typography color="text.secondary">
-                    This is the immediate HTTP response from the simulator command. LiveSync delivery is visible in
-                    the Client, League, TV, and Debug views.
+                    This is the immediate HTTP response from the simulator
+                    command. LiveSync delivery is visible in the Client, League,
+                    TV, and Debug views.
                   </Typography>
                   {latestResponse ? (
                     <Stack spacing={2}>
@@ -520,7 +602,10 @@ function ControlRoomPage() {
                   <Typography component="h2" variant="h3">
                     Recent activity
                   </Typography>
-                  <AsyncBlock state={activityState} emptyMessage="No activity yet.">
+                  <AsyncBlock
+                    state={activityState}
+                    emptyMessage="No activity yet."
+                  >
                     {(data) => <ActivityFeed items={data.items} />}
                   </AsyncBlock>
                 </Stack>
@@ -535,8 +620,14 @@ function ControlRoomPage() {
 
 function LeaguePage() {
   const { leagueSlug } = useParams();
-  const leaderboardState = useAsyncData(() => getLeaderboard(leagueSlug), [leagueSlug]);
-  const activityState = useAsyncData(() => getLeagueActivity(leagueSlug), [leagueSlug]);
+  const leaderboardState = useAsyncData(
+    () => getLeaderboard(leagueSlug),
+    [leagueSlug]
+  );
+  const activityState = useAsyncData(
+    () => getLeagueActivity(leagueSlug),
+    [leagueSlug]
+  );
   const { updateData: updateLeaderboardData } = leaderboardState;
   const { updateData: updateActivityData } = activityState;
   const liveSyncChannels = useMemo(
@@ -547,8 +638,10 @@ function LeaguePage() {
     ({ name, data }) => {
       const payload = unwrapLiveSyncPayload(data);
 
-      if (name === 'leaderboard.updated') {
-        const entries = normalizeLeaderboardEntries(payload?.leaderboard ?? payload?.entries);
+      if (name === "leaderboard.updated") {
+        const entries = normalizeLeaderboardEntries(
+          payload?.leaderboard ?? payload?.entries
+        );
 
         if (payload?.leagueSlug && payload.leagueSlug !== leagueSlug) {
           return `ignored leaderboard for league ${payload.leagueSlug}`;
@@ -564,7 +657,7 @@ function LeaguePage() {
         return `leaderboard replaced with ${entries.length} rows`;
       }
 
-      if (name === 'activity.created') {
+      if (name === "activity.created") {
         const items = normalizeActivityItems(payload);
 
         if (payload?.leagueSlug && payload.leagueSlug !== leagueSlug) {
@@ -578,7 +671,7 @@ function LeaguePage() {
           };
         });
 
-        return `activity merged with ${items.length} incoming item${items.length === 1 ? '' : 's'}`;
+        return `activity merged with ${items.length} incoming item${items.length === 1 ? "" : "s"}`;
       }
 
       return `ignored event ${name}`;
@@ -597,14 +690,21 @@ function LeaguePage() {
         title="League leaderboard"
         description="Initial standings load over HTTP; subsequent updates arrive through Ably LiveSync."
       />
-      <LiveSyncStatus status={liveSync.status} channels={liveSyncChannels} debug={liveSync.debug} />
+      <LiveSyncStatus
+        status={liveSync.status}
+        channels={liveSyncChannels}
+        debug={liveSync.debug}
+      />
 
       <Grid container spacing={2}>
         <Grid size={{ xs: 12, md: 8 }}>
           <Card variant="outlined">
             <CardContent>
               <Stack spacing={2}>
-                <AsyncBlock state={leaderboardState} emptyMessage="No leaderboard entries yet.">
+                <AsyncBlock
+                  state={leaderboardState}
+                  emptyMessage="No leaderboard entries yet."
+                >
                   {(data) => (
                     <>
                       <Typography component="h2" variant="h3">
@@ -626,7 +726,10 @@ function LeaguePage() {
                 <Typography component="h2" variant="h3">
                   Recent activity
                 </Typography>
-                <AsyncBlock state={activityState} emptyMessage="No activity yet.">
+                <AsyncBlock
+                  state={activityState}
+                  emptyMessage="No activity yet."
+                >
                   {(data) => <ActivityFeed items={data.items} />}
                 </AsyncBlock>
               </Stack>
@@ -645,46 +748,74 @@ function ClientPage() {
   const clientLeagueSlug = clientState.data?.league?.slug;
   const liveSyncChannels = useMemo(
     () => [
-      `team:${userSlug}`,
-      ...(clientLeagueSlug ? [`league:${clientLeagueSlug}:activity`] : [])
+      ...(clientLeagueSlug
+        ? [
+            `league:${clientLeagueSlug}:teams`,
+            `league:${clientLeagueSlug}:activity`
+          ]
+        : [])
     ],
-    [clientLeagueSlug, userSlug]
+    [clientLeagueSlug]
   );
   const handleLiveSyncMessage = useCallback(
     ({ name, data }) => {
       const payload = unwrapLiveSyncPayload(data);
 
-      if (name === 'team.updated') {
+      if (name === "team.updated") {
         if (payload?.userSlug && payload.userSlug !== userSlug) {
           return `ignored team update for ${payload.userSlug}`;
         }
 
+        console.debug("[ClientPage] team.updated received", {
+          userSlug,
+          rawData: data,
+          payload
+        });
+
         updateClientData((current) => {
+          console.debug("[ClientPage] applying team.updated", {
+            userSlug,
+            currentPoints: current?.team?.points,
+            nextPoints: payload?.points ?? payload?.totalPoints,
+            currentRank: current?.team?.rank,
+            nextRank: payload?.rank
+          });
           return {
             ...current,
             team: {
               ...current.team,
               slug: payload?.teamSlug ?? current.team.slug,
               name: payload?.teamName ?? current.team.name,
-              points: Number(payload?.points ?? payload?.totalPoints ?? current.team.points),
+              points: Number(
+                payload?.points ?? payload?.totalPoints ?? current.team.points
+              ),
               rank: payload?.rank ?? current.team.rank,
               previousRank: payload?.previousRank ?? current.team.previousRank,
               rankDelta: payload?.rankDelta ?? current.team.rankDelta,
               lastEvent: payload?.lastEvent ?? current.team.lastEvent,
               updatedAt: payload?.updatedAt ?? current.team.updatedAt
-            }
+            },
+            squad: payload?.squad ?? current.squad
           };
         });
 
         return `team ${payload?.teamSlug ?? userSlug} updated`;
       }
 
-      if (name === 'activity.created') {
+      if (name === "activity.created") {
         let mergedCount = 0;
 
+        console.debug("[ClientPage] activity.created received", {
+          userSlug,
+          rawData: data,
+          payload
+        });
         updateClientData((current) => {
           const incomingItems = normalizeActivityItems(payload).filter(
-            (item) => item.payload?.teamSlug === current.team.slug
+            (item) => {
+              const itemTeamSlug = item.teamSlug ?? item.payload?.teamSlug;
+              return itemTeamSlug === current.team.slug;
+            }
           );
 
           mergedCount = incomingItems.length;
@@ -700,8 +831,8 @@ function ClientPage() {
         });
 
         return mergedCount > 0
-          ? `activity merged with ${mergedCount} matching item${mergedCount === 1 ? '' : 's'}`
-          : 'ignored activity with no matching team item';
+          ? `activity merged with ${mergedCount} matching item${mergedCount === 1 ? "" : "s"}`
+          : "ignored activity with no matching team item";
       }
 
       return `ignored event ${name}`;
@@ -720,9 +851,16 @@ function ClientPage() {
         title="Team state"
         description="Initial team state loads over HTTP; subsequent score, rank, squad, and activity updates arrive through Ably LiveSync."
       />
-      <LiveSyncStatus status={liveSync.status} channels={liveSyncChannels} debug={liveSync.debug} />
+      <LiveSyncStatus
+        status={liveSync.status}
+        channels={liveSyncChannels}
+        debug={liveSync.debug}
+      />
 
-      <AsyncBlock state={clientState} emptyMessage="No team found for this user.">
+      <AsyncBlock
+        state={clientState}
+        emptyMessage="No team found for this user."
+      >
         {(data) => (
           <Grid container spacing={2}>
             <Grid size={{ xs: 12, md: 5 }}>
@@ -732,10 +870,15 @@ function ClientPage() {
                     <Typography component="h2" variant="h3">
                       {data.team.name}
                     </Typography>
-                    <Typography color="text.secondary">{data.user.name}</Typography>
+                    <Typography color="text.secondary">
+                      {data.user.name}
+                    </Typography>
                     <Stack direction="row" spacing={1} flexWrap="wrap">
                       <StatChip label="Points" value={data.team.points} />
-                      <StatChip label="Rank" value={formatRank(data.team.rank)} />
+                      <StatChip
+                        label="Rank"
+                        value={formatRank(data.team.rank)}
+                      />
                     </Stack>
                     {data.team.lastEvent ? (
                       <Typography variant="body2" color="text.secondary">
@@ -784,18 +927,26 @@ function ClientPage() {
 
 function TvPage() {
   const { leagueSlug } = useParams();
-  const leaderboardState = useAsyncData(() => getLeaderboard(leagueSlug), [leagueSlug]);
+  const leaderboardState = useAsyncData(
+    () => getLeaderboard(leagueSlug),
+    [leagueSlug]
+  );
   const { updateData: updateLeaderboardData } = leaderboardState;
-  const liveSyncChannels = useMemo(() => [`league:${leagueSlug}:leaderboard`], [leagueSlug]);
+  const liveSyncChannels = useMemo(
+    () => [`league:${leagueSlug}:leaderboard`],
+    [leagueSlug]
+  );
   const handleLiveSyncMessage = useCallback(
     ({ name, data }) => {
       const payload = unwrapLiveSyncPayload(data);
 
-      if (name !== 'leaderboard.updated') {
+      if (name !== "leaderboard.updated") {
         return `ignored event ${name}`;
       }
 
-      const entries = normalizeLeaderboardEntries(payload?.leaderboard ?? payload?.entries);
+      const entries = normalizeLeaderboardEntries(
+        payload?.leaderboard ?? payload?.entries
+      );
 
       if (payload?.leagueSlug && payload.leagueSlug !== leagueSlug) {
         return `ignored leaderboard for league ${payload.leagueSlug}`;
@@ -819,19 +970,37 @@ function TvPage() {
 
   return (
     <Box sx={{ py: { md: 4 } }}>
-      <AsyncBlock state={leaderboardState} emptyMessage="No leaderboard entries yet.">
+      <AsyncBlock
+        state={leaderboardState}
+        emptyMessage="No leaderboard entries yet."
+      >
         {(data) => (
           <Stack spacing={3}>
-            <LiveSyncStatus status={liveSync.status} channels={liveSyncChannels} debug={liveSync.debug} compact />
+            <LiveSyncStatus
+              status={liveSync.status}
+              channels={liveSyncChannels}
+              debug={liveSync.debug}
+              compact
+            />
             <Stack spacing={0.5}>
-              <Typography variant="overline" color="primary" sx={{ fontWeight: 800 }}>
+              <Typography
+                variant="overline"
+                color="primary"
+                sx={{ fontWeight: 800 }}
+              >
                 TV leaderboard
               </Typography>
-              <Typography component="h1" sx={{ fontSize: { xs: '2.75rem', md: '4rem' }, fontWeight: 800 }}>
+              <Typography
+                component="h1"
+                sx={{
+                  fontSize: { xs: "2.75rem", md: "4rem" },
+                  fontWeight: 800
+                }}
+              >
                 {data.league.name}
               </Typography>
             </Stack>
-            <Paper variant="outlined" sx={{ overflow: 'hidden' }}>
+            <Paper variant="outlined" sx={{ overflow: "hidden" }}>
               <Table size="medium">
                 <TableHead>
                   <TableRow>
@@ -844,17 +1013,27 @@ function TvPage() {
                   {data.leaderboard.map((entry) => (
                     <TableRow key={entry.teamSlug}>
                       <TableCell>
-                        <Typography sx={{ fontSize: '2rem', fontWeight: 800 }}>
+                        <Typography sx={{ fontSize: "2rem", fontWeight: 800 }}>
                           {entry.rank}
                         </Typography>
                       </TableCell>
                       <TableCell>
-                        <Typography sx={{ fontSize: { xs: '1.5rem', md: '2.25rem' }, fontWeight: 800 }}>
+                        <Typography
+                          sx={{
+                            fontSize: { xs: "1.5rem", md: "2.25rem" },
+                            fontWeight: 800
+                          }}
+                        >
                           {entry.teamName}
                         </Typography>
                       </TableCell>
                       <TableCell align="right">
-                        <Typography sx={{ fontSize: { xs: '1.75rem', md: '2.75rem' }, fontWeight: 800 }}>
+                        <Typography
+                          sx={{
+                            fontSize: { xs: "1.75rem", md: "2.75rem" },
+                            fontWeight: 800
+                          }}
+                        >
                           {entry.points}
                         </Typography>
                       </TableCell>
@@ -891,11 +1070,20 @@ function DebugPage() {
                 <Typography component="h2" variant="h3">
                   API
                 </Typography>
-                <KeyValue label="Base URL" value={apiBaseUrl || 'same origin'} />
-                <AsyncBlock state={healthState} emptyMessage="Health status unavailable.">
+                <KeyValue
+                  label="Base URL"
+                  value={apiBaseUrl || "same origin"}
+                />
+                <AsyncBlock
+                  state={healthState}
+                  emptyMessage="Health status unavailable."
+                >
                   {(data) => <CodeBlock value={data} />}
                 </AsyncBlock>
-                <AsyncBlock state={configState} emptyMessage="Config unavailable.">
+                <AsyncBlock
+                  state={configState}
+                  emptyMessage="Config unavailable."
+                >
                   {(data) => <CodeBlock value={data} />}
                 </AsyncBlock>
               </Stack>
@@ -949,7 +1137,10 @@ function MatchSummary({ match, events }) {
   return (
     <Stack spacing={2}>
       <Stack direction="row" spacing={1} flexWrap="wrap">
-        <Chip label={`${match.homeTeam} vs ${match.awayTeam}`} color="primary" />
+        <Chip
+          label={`${match.homeTeam} vs ${match.awayTeam}`}
+          color="primary"
+        />
         <Chip label={match.status} variant="outlined" />
         <Chip label={match.leagueName} variant="outlined" />
       </Stack>
@@ -989,7 +1180,9 @@ function LeaderboardTable({ entries }) {
             <TableRow key={entry.teamSlug}>
               <TableCell>{entry.rank}</TableCell>
               <TableCell>{entry.teamName}</TableCell>
-              <TableCell>{entry.managerName || entry.managerSlug || 'Unassigned'}</TableCell>
+              <TableCell>
+                {entry.managerName || entry.managerSlug || "Unassigned"}
+              </TableCell>
               <TableCell align="right">{entry.points}</TableCell>
               <TableCell>{formatDateTime(entry.updatedAt)}</TableCell>
             </TableRow>
@@ -1020,9 +1213,15 @@ function SquadTable({ squad }) {
           {squad.map((player) => (
             <TableRow key={player.slug}>
               <TableCell>{player.name}</TableCell>
-              <TableCell>{player.position || '-'}</TableCell>
-              <TableCell>{player.nationality || '-'}</TableCell>
-              <TableCell>{player.isCaptain ? <Chip label="Captain" size="small" color="primary" /> : '-'}</TableCell>
+              <TableCell>{player.position || "-"}</TableCell>
+              <TableCell>{player.nationality || "-"}</TableCell>
+              <TableCell>
+                {player.isCaptain ? (
+                  <Chip label="Captain" size="small" color="primary" />
+                ) : (
+                  "-"
+                )}
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>
@@ -1040,7 +1239,10 @@ function ActivityFeed({ items }) {
     <List dense disablePadding>
       {items.map((item, index) => (
         <ListItem key={getActivityItemKey(item, index)} disableGutters divider>
-          <ListItemText primary={item.message} secondary={formatDateTime(item.createdAt)} />
+          <ListItemText
+            primary={item.message}
+            secondary={formatDateTime(item.createdAt)}
+          />
         </ListItem>
       ))}
     </List>
@@ -1058,7 +1260,7 @@ function AffectedTeams({ teams }) {
         <Chip
           key={team.teamSlug}
           label={`${team.teamSlug}: ${formatSigned(team.pointsDelta)} (${team.totalPoints})`}
-          color={team.pointsDelta >= 0 ? 'primary' : 'warning'}
+          color={team.pointsDelta >= 0 ? "primary" : "warning"}
           variant="outlined"
         />
       ))}
@@ -1067,7 +1269,9 @@ function AffectedTeams({ teams }) {
 }
 
 function StatChip({ label, value }) {
-  return <Chip label={`${label}: ${value}`} color="primary" variant="outlined" />;
+  return (
+    <Chip label={`${label}: ${value}`} color="primary" variant="outlined" />
+  );
 }
 
 function KeyValue({ label, value }) {
@@ -1083,9 +1287,9 @@ function LiveSyncStatus({ status, channels, debug, compact = false }) {
   const label = liveSyncStatusLabel(status);
   const color = liveSyncStatusColor(status);
   const description =
-    status === 'auth_failed'
-      ? 'LiveSync is not configured. Add ABLY_API_KEY and configure the Ably Postgres connector.'
-      : `${label} for ${channels.length} channel${channels.length === 1 ? '' : 's'}.`;
+    status === "auth_failed"
+      ? "LiveSync is not configured. Add ABLY_API_KEY and configure the Ably Postgres connector."
+      : `${label} for ${channels.length} channel${channels.length === 1 ? "" : "s"}.`;
   const lastMessage = debug?.lastMessage;
 
   if (compact) {
@@ -1105,7 +1309,16 @@ function LiveSyncStatus({ status, channels, debug, compact = false }) {
   }
 
   return (
-    <Alert severity={status === 'connected' ? 'success' : status === 'auth_failed' ? 'error' : 'info'} icon={false}>
+    <Alert
+      severity={
+        status === "connected"
+          ? "success"
+          : status === "auth_failed"
+            ? "error"
+            : "info"
+      }
+      icon={false}
+    >
       <Stack spacing={0.75}>
         <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
           <Chip label={label} color={color} size="small" />
@@ -1113,16 +1326,21 @@ function LiveSyncStatus({ status, channels, debug, compact = false }) {
         </Stack>
         <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
           {channels.map((channel) => (
-            <Chip key={channel} label={channel} size="small" variant="outlined" />
+            <Chip
+              key={channel}
+              label={channel}
+              size="small"
+              variant="outlined"
+            />
           ))}
         </Stack>
         {lastMessage || debug?.lastMerge || debug?.lastError ? (
           <Typography variant="body2" color="text.secondary">
             {lastMessage
               ? `Last message ${lastMessage.channel} / ${lastMessage.name} at ${formatTime(lastMessage.receivedAt)}. `
-              : ''}
-            {debug?.lastMerge ? `Merge: ${debug.lastMerge}. ` : ''}
-            {debug?.lastError ? `Error: ${debug.lastError}.` : ''}
+              : ""}
+            {debug?.lastMerge ? `Merge: ${debug.lastMerge}. ` : ""}
+            {debug?.lastError ? `Error: ${debug.lastError}.` : ""}
           </Typography>
         ) : null}
       </Stack>
@@ -1164,15 +1382,15 @@ function CodeBlock({ value }) {
     <Box
       component="pre"
       sx={{
-        bgcolor: 'action.hover',
+        bgcolor: "action.hover",
         borderRadius: 1,
-        fontSize: '0.8125rem',
+        fontSize: "0.8125rem",
         m: 0,
         maxHeight: 300,
-        overflow: 'auto',
+        overflow: "auto",
         p: 2,
-        whiteSpace: 'pre-wrap',
-        wordBreak: 'break-word'
+        whiteSpace: "pre-wrap",
+        wordBreak: "break-word"
       }}
     >
       {JSON.stringify(value, null, 2)}
@@ -1214,7 +1432,11 @@ function NotFoundPage() {
 }
 
 function useAsyncData(load, deps) {
-  const [state, setState] = useState({ data: null, error: null, loading: true });
+  const [state, setState] = useState({
+    data: null,
+    error: null,
+    loading: true
+  });
 
   const refresh = useCallback(async () => {
     setState((current) => ({ ...current, error: null, loading: true }));
@@ -1268,12 +1490,12 @@ function useAsyncData(load, deps) {
 
 function logLiveSync(message, details) {
   if (import.meta.env.DEV) {
-    console.info(`[LiveSync] ${message}`, details ?? '');
+    console.info(`[LiveSync] ${message}`, details ?? "");
   }
 }
 
 function publishLiveSyncDebug(debug) {
-  if (typeof window === 'undefined') {
+  if (typeof window === "undefined") {
     return;
   }
 
@@ -1282,7 +1504,7 @@ function publishLiveSyncDebug(debug) {
     updatedAt: new Date().toISOString()
   };
   window.dispatchEvent(
-    new CustomEvent('ably-fwc-livesync-debug', {
+    new CustomEvent("ably-fwc-livesync-debug", {
       detail: window.__ABLY_FWC_LIVESYNC_DEBUG__
     })
   );
@@ -1290,11 +1512,11 @@ function publishLiveSyncDebug(debug) {
 
 function normalizeLiveSyncMessage(channel, message) {
   const unwrappedData = unwrapLiveSyncPayload(message.data);
-  const name = message.name || unwrappedData?.name || 'unknown';
+  const name = message.name || unwrappedData?.name || "unknown";
   const data =
     unwrappedData &&
-    typeof unwrappedData === 'object' &&
-    'data' in unwrappedData &&
+    typeof unwrappedData === "object" &&
+    "data" in unwrappedData &&
     (unwrappedData.name || unwrappedData.channel || unwrappedData.mutationId)
       ? unwrapLiveSyncPayload(unwrappedData.data)
       : unwrappedData;
@@ -1308,7 +1530,7 @@ function normalizeLiveSyncMessage(channel, message) {
 }
 
 function unwrapLiveSyncPayload(data) {
-  if (typeof data === 'string') {
+  if (typeof data === "string") {
     try {
       return JSON.parse(data);
     } catch {
@@ -1321,7 +1543,9 @@ function unwrapLiveSyncPayload(data) {
 
 function useLiveSyncDebugSnapshot() {
   const [snapshot, setSnapshot] = useState(() =>
-    typeof window === 'undefined' ? null : window.__ABLY_FWC_LIVESYNC_DEBUG__ ?? null
+    typeof window === "undefined"
+      ? null
+      : (window.__ABLY_FWC_LIVESYNC_DEBUG__ ?? null)
   );
 
   useEffect(() => {
@@ -1329,9 +1553,9 @@ function useLiveSyncDebugSnapshot() {
       setSnapshot(event.detail);
     }
 
-    window.addEventListener('ably-fwc-livesync-debug', handleDebugEvent);
+    window.addEventListener("ably-fwc-livesync-debug", handleDebugEvent);
     return () => {
-      window.removeEventListener('ably-fwc-livesync-debug', handleDebugEvent);
+      window.removeEventListener("ably-fwc-livesync-debug", handleDebugEvent);
     };
   }, []);
 
@@ -1339,14 +1563,14 @@ function useLiveSyncDebugSnapshot() {
 }
 
 function useLiveSyncSubscriptions({ channels, onMessage }) {
-  const [status, setStatus] = useState('initialized');
+  const [status, setStatus] = useState("initialized");
   const [debug, setDebug] = useState(() => ({
     subscribedChannels: [],
     lastMessage: null,
     lastMerge: null,
     lastError: null
   }));
-  const channelKey = channels.join('|');
+  const channelKey = channels.join("|");
 
   useEffect(() => {
     const activeChannels = Array.from(new Set(channels.filter(Boolean)));
@@ -1358,15 +1582,15 @@ function useLiveSyncSubscriptions({ channels, onMessage }) {
     }));
 
     if (activeChannels.length === 0) {
-      setStatus('initialized');
+      setStatus("initialized");
       const nextDebug = {
         subscribedChannels: [],
         lastMessage: null,
-        lastMerge: 'no channels to subscribe',
+        lastMerge: "no channels to subscribe",
         lastError: null
       };
       setDebug(nextDebug);
-      publishLiveSyncDebug({ status: 'initialized', ...nextDebug });
+      publishLiveSyncDebug({ status: "initialized", ...nextDebug });
       return undefined;
     }
 
@@ -1374,11 +1598,11 @@ function useLiveSyncSubscriptions({ channels, onMessage }) {
     let active = true;
     const subscriptions = [];
 
-    logLiveSync('starting subscriptions', { channels: activeChannels });
+    logLiveSync("starting subscriptions", { channels: activeChannels });
 
     const handleConnectionState = (stateChange) => {
       if (active) {
-        logLiveSync('connection state changed', {
+        logLiveSync("connection state changed", {
           current: stateChange.current,
           previous: stateChange.previous,
           reason: stateChange.reason?.message
@@ -1413,14 +1637,17 @@ function useLiveSyncSubscriptions({ channels, onMessage }) {
               return;
             }
 
-            const normalizedMessage = normalizeLiveSyncMessage(channelName, message);
-            logLiveSync('message received', {
+            const normalizedMessage = normalizeLiveSyncMessage(
+              channelName,
+              message
+            );
+            logLiveSync("message received", {
               channel: normalizedMessage.channel,
               name: normalizedMessage.name,
               data: normalizedMessage.data
             });
 
-            let mergeResult = 'message handled';
+            let mergeResult = "message handled";
 
             try {
               mergeResult =
@@ -1432,7 +1659,7 @@ function useLiveSyncSubscriptions({ channels, onMessage }) {
                 }) ?? mergeResult;
             } catch (error) {
               mergeResult = `merge failed: ${error.message}`;
-              console.error('Failed to merge LiveSync message', error);
+              console.error("Failed to merge LiveSync message", error);
             }
 
             setDebug((current) => {
@@ -1444,13 +1671,15 @@ function useLiveSyncSubscriptions({ channels, onMessage }) {
                   receivedAt: normalizedMessage.receivedAt
                 },
                 lastMerge: mergeResult,
-                lastError: mergeResult.startsWith('merge failed') ? mergeResult : null
+                lastError: mergeResult.startsWith("merge failed")
+                  ? mergeResult
+                  : null
               };
               publishLiveSyncDebug({ status, ...next });
               return next;
             });
 
-            logLiveSync('message merge result', {
+            logLiveSync("message merge result", {
               channel: channelName,
               name: normalizedMessage.name,
               result: mergeResult
@@ -1459,40 +1688,47 @@ function useLiveSyncSubscriptions({ channels, onMessage }) {
 
           subscriptions.push({ channel, listener });
 
-          Promise.resolve(channel.subscribe(listener)).then(() => channel.attach()).then(() => {
-            logLiveSync('subscribed and attached to channel', { channel: channelName });
-            setDebug((current) => {
-              const subscribedChannels = Array.from(
-                new Set([...current.subscribedChannels, channelName])
-              );
-              const next = {
-                ...current,
-                subscribedChannels,
-                lastMerge: `subscribed and attached to ${channelName}`
-              };
-              publishLiveSyncDebug({ status, ...next });
-              return next;
-            });
-          }).catch((error) => {
-            console.error(`Failed to subscribe to ${channelName}`, error);
-            if (active) {
-              setStatus('failed');
+          Promise.resolve(channel.subscribe(listener))
+            .then(() => channel.attach())
+            .then(() => {
+              logLiveSync("subscribed and attached to channel", {
+                channel: channelName
+              });
               setDebug((current) => {
+                const subscribedChannels = Array.from(
+                  new Set([...current.subscribedChannels, channelName])
+                );
                 const next = {
                   ...current,
-                  lastError: `Failed to subscribe to ${channelName}: ${error.message}`
+                  subscribedChannels,
+                  lastMerge: `subscribed and attached to ${channelName}`
                 };
-                publishLiveSyncDebug({ status: 'failed', ...next });
+                publishLiveSyncDebug({ status, ...next });
                 return next;
               });
-            }
-          });
+            })
+            .catch((error) => {
+              console.error(`Failed to subscribe to ${channelName}`, error);
+              if (active) {
+                setStatus("failed");
+                setDebug((current) => {
+                  const next = {
+                    ...current,
+                    lastError: `Failed to subscribe to ${channelName}: ${error.message}`
+                  };
+                  publishLiveSyncDebug({ status: "failed", ...next });
+                  return next;
+                });
+              }
+            });
         }
       })
       .catch((error) => {
-        console.error('Failed to start LiveSync client', error);
+        console.error("Failed to start LiveSync client", error);
         if (active) {
-          const nextStatus = error.message?.includes('Unable to get Ably token') ? 'auth_failed' : 'failed';
+          const nextStatus = error.message?.includes("Unable to get Ably token")
+            ? "auth_failed"
+            : "failed";
           setStatus(nextStatus);
           setDebug((current) => {
             const next = {
@@ -1555,34 +1791,45 @@ function normalizeActivityItems(data) {
 
 function mergeActivityItems(currentItems = [], incomingItems = [], limit = 25) {
   const existingIds = new Set(
-    currentItems.map((item) => item.id).filter((id) => id !== null && id !== undefined)
+    currentItems
+      .map((item) => item.id)
+      .filter((id) => id !== null && id !== undefined)
   );
   const uniqueIncoming = incomingItems.filter(
-    (item) => item.id === null || item.id === undefined || !existingIds.has(item.id)
+    (item) =>
+      item.id === null || item.id === undefined || !existingIds.has(item.id)
   );
 
   return [...uniqueIncoming, ...currentItems].slice(0, limit);
 }
 
 function formatEventType(eventType) {
-  return eventType.replaceAll('_', ' ');
+  return eventType.replaceAll("_", " ");
 }
 
 function formatActivityPayload(payload) {
   if (!payload?.teamSlug) {
-    return 'Live update received';
+    return "Live update received";
   }
 
-  const points = payload.pointsDelta === undefined ? '' : ` ${formatSigned(payload.pointsDelta)}`;
+  const points =
+    payload.pointsDelta === undefined
+      ? ""
+      : ` ${formatSigned(payload.pointsDelta)}`;
   return `${payload.teamSlug}${points}`;
 }
 
 function formatTeamLastEvent(event) {
-  const eventType = event.eventType ? formatEventType(event.eventType) : 'update';
-  const points = event.pointsDelta === undefined ? '' : ` (${formatSigned(event.pointsDelta)})`;
-  const minute = event.minute === undefined ? '' : `${event.minute}' `;
+  const eventType = event.eventType
+    ? formatEventType(event.eventType)
+    : "update";
+  const points =
+    event.pointsDelta === undefined
+      ? ""
+      : ` (${formatSigned(event.pointsDelta)})`;
+  const minute = event.minute === undefined ? "" : `${event.minute}' `;
 
-  return `${minute}${event.playerName ?? event.playerSlug ?? 'Player'} ${eventType}${points}`;
+  return `${minute}${event.playerName ?? event.playerSlug ?? "Player"} ${eventType}${points}`;
 }
 
 function formatSigned(value) {
@@ -1590,60 +1837,67 @@ function formatSigned(value) {
 }
 
 function formatRank(rank) {
-  return rank === null || rank === undefined ? '-' : rank;
+  return rank === null || rank === undefined ? "-" : rank;
 }
 
 function formatDateTime(value) {
   if (!value) {
-    return '-';
+    return "-";
   }
 
   return new Intl.DateTimeFormat(undefined, {
-    dateStyle: 'medium',
-    timeStyle: 'short'
+    dateStyle: "medium",
+    timeStyle: "short"
   }).format(new Date(value));
 }
 
 function formatTime(value) {
   if (!value) {
-    return '-';
+    return "-";
   }
 
   return new Intl.DateTimeFormat(undefined, {
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit'
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit"
   }).format(new Date(value));
 }
 
 function getActivityItemKey(item, index) {
-  return item.id ?? `${item.createdAt ?? 'live'}:${item.message ?? 'activity'}:${index}`;
+  return (
+    item.id ??
+    `${item.createdAt ?? "live"}:${item.message ?? "activity"}:${index}`
+  );
 }
 
 function liveSyncStatusLabel(status) {
   const labels = {
-    initialized: 'LiveSync starting',
-    connecting: 'LiveSync connecting',
-    connected: 'LiveSync connected',
-    disconnected: 'LiveSync disconnected',
-    suspended: 'LiveSync suspended',
-    closing: 'LiveSync closing',
-    closed: 'LiveSync closed',
-    failed: 'LiveSync failed',
-    auth_failed: 'LiveSync setup error'
+    initialized: "LiveSync starting",
+    connecting: "LiveSync connecting",
+    connected: "LiveSync connected",
+    disconnected: "LiveSync disconnected",
+    suspended: "LiveSync suspended",
+    closing: "LiveSync closing",
+    closed: "LiveSync closed",
+    failed: "LiveSync failed",
+    auth_failed: "LiveSync setup error"
   };
 
   return labels[status] ?? `LiveSync ${status}`;
 }
 
 function liveSyncStatusColor(status) {
-  if (status === 'connected') {
-    return 'success';
+  if (status === "connected") {
+    return "success";
   }
 
-  if (status === 'failed' || status === 'suspended' || status === 'auth_failed') {
-    return 'warning';
+  if (
+    status === "failed" ||
+    status === "suspended" ||
+    status === "auth_failed"
+  ) {
+    return "warning";
   }
 
-  return 'info';
+  return "info";
 }

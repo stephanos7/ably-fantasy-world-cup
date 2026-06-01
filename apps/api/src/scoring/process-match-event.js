@@ -37,14 +37,13 @@ function signedPoints(pointsDelta) {
 
 function toLeaderboardPayloadEntry(entry) {
   return {
+    rank: entry.rank,
     teamSlug: entry.teamSlug,
     teamName: entry.teamName,
     managerSlug: entry.managerSlug,
     managerName: entry.managerName,
-    rank: entry.rank,
-    previousRank: entry.previousRank,
-    rankDelta: entry.rankDelta,
-    totalPoints: entry.totalPoints
+    points: entry.totalPoints,
+    updatedAt: entry.updatedAt
   };
 }
 
@@ -98,11 +97,10 @@ export async function processMatchEvent(
     previousRank: entry.rank,
     totalPoints: entry.totalPoints + (deltaByTeamId.get(entry.teamId) ?? 0)
   }));
-  const nextLeaderboard = rankLeaderboard({ entries: nextLeaderboardInput });
-
-  await replaceLeaderboardEntries(client, {
+  const rankedLeaderboard = rankLeaderboard({ entries: nextLeaderboardInput });
+  const nextLeaderboard = await replaceLeaderboardEntries(client, {
     leagueId: match.leagueId,
-    entries: nextLeaderboard
+    entries: rankedLeaderboard
   });
 
   const rankedByTeamId = new Map(
@@ -122,7 +120,7 @@ export async function processMatchEvent(
       minute
     };
 
-    await insertActivityFeedItem(client, {
+    const activityItem = await insertActivityFeedItem(client, {
       leagueId: match.leagueId,
       userId: team.managerId,
       message,
@@ -130,7 +128,9 @@ export async function processMatchEvent(
     });
 
     activityItems.push({
+      id: activityItem.id,
       teamSlug: team.teamSlug,
+      userSlug: team.managerSlug,
       message,
       pointsDelta: delta.pointsDelta,
       matchSlug: match.slug,
@@ -140,48 +140,67 @@ export async function processMatchEvent(
 
   const mutationId = `simulator:${event.id}`;
   const outboxMessages = [];
+
+  async function addOutboxMessage({ channel, name, data, headers }) {
+    const inserted = await insertOutboxEvent(client, {
+      mutationId,
+      channel,
+      name,
+      data,
+      headers
+    });
+
+    const message = {
+      sequenceId: inserted.sequenceId,
+      channel,
+      name
+    };
+
+    outboxMessages.push(message);
+
+    if (process.env.NODE_ENV !== "production") {
+      console.debug("[Simulator] outbox inserted", {
+        mutationId,
+        ...message
+      });
+    }
+
+    return inserted;
+  }
+
   const leaderboardPayload = {
     leagueSlug: match.leagueSlug,
     leaderboard: nextLeaderboard.map(toLeaderboardPayloadEntry)
   };
 
-  await insertOutboxEvent(client, {
-    mutationId,
+  await addOutboxMessage({
     channel: `league:${match.leagueSlug}:leaderboard`,
     name: "leaderboard.updated",
     data: leaderboardPayload
   });
-  outboxMessages.push(`league:${match.leagueSlug}:leaderboard`);
 
-  if (activityItems.length > 0) {
-    await insertOutboxEvent(client, {
-      mutationId,
-      channel: `league:${match.leagueSlug}:activity`,
-      name: "activity.created",
-      data: {
-        leagueSlug: match.leagueSlug,
-        items: activityItems
-      }
-    });
-    outboxMessages.push(`league:${match.leagueSlug}:activity`);
-  }
+  await addOutboxMessage({
+    channel: `league:${match.leagueSlug}:activity`,
+    name: "activity.created",
+    data: {
+      leagueSlug: match.leagueSlug,
+      items: activityItems
+    }
+  });
 
   for (const delta of teamDeltas) {
     const team = teamsById.get(delta.teamId);
     const ranked = rankedByTeamId.get(delta.teamId);
 
-    await insertOutboxEvent(client, {
-      mutationId,
-      channel: `team:${team.managerSlug}`,
+    await addOutboxMessage({
+      channel: `league:${match.leagueSlug}:teams`,
       name: "team.updated",
       data: {
         userSlug: team.managerSlug,
         teamSlug: team.teamSlug,
         teamName: team.teamName,
-        totalPoints: ranked.totalPoints,
+        points: ranked.totalPoints,
         rank: ranked.rank,
-        previousRank: ranked.previousRank,
-        rankDelta: ranked.rankDelta,
         lastEvent: {
           eventType,
           playerSlug: player.slug,
@@ -191,11 +210,9 @@ export async function processMatchEvent(
         }
       }
     });
-    outboxMessages.push(`team:${team.managerSlug}`);
   }
 
-  await insertOutboxEvent(client, {
-    mutationId,
+  await addOutboxMessage({
     channel: `match:${match.slug}`,
     name: "match.updated",
     data: {
@@ -208,7 +225,6 @@ export async function processMatchEvent(
       }
     }
   });
-  outboxMessages.push(`match:${match.slug}`);
 
   return {
     ok: true,

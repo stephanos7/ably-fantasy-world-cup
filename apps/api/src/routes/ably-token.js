@@ -3,7 +3,6 @@ import { Rest } from "ably";
 
 const demoSubscribeCapability = {
   "league:*": ["subscribe"],
-  "team:*": ["subscribe"],
   "match:*": ["subscribe"]
 };
 

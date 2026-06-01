@@ -24,15 +24,25 @@ export async function listLeaderboardEntriesForLeague(client, leagueId) {
 }
 
 export async function replaceLeaderboardEntries(client, { leagueId, entries }) {
+  const updatedEntries = [];
+
   for (const entry of entries) {
-    await client.query(
+    const { rows } = await client.query(
       `INSERT INTO leaderboard_entries (league_id, fantasy_team_id, rank, points, updated_at)
        VALUES ($1, $2, $3, $4, now())
        ON CONFLICT (league_id, fantasy_team_id)
        DO UPDATE SET rank = EXCLUDED.rank,
                      points = EXCLUDED.points,
-                     updated_at = now()`,
+                     updated_at = now()
+       RETURNING updated_at AS "updatedAt"`,
       [leagueId, entry.teamId, entry.rank, entry.totalPoints]
     );
+
+    updatedEntries.push({
+      ...entry,
+      updatedAt: rows[0].updatedAt
+    });
   }
+
+  return updatedEntries;
 }

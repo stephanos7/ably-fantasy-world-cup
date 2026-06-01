@@ -53,8 +53,8 @@ describe("API shell", () => {
       assert.equal(typeof response.body.mac, "string");
       assert.equal(response.body.ttl, 60 * 60 * 1000);
       assert.deepEqual(capability["league:*"], ["subscribe"]);
-      assert.deepEqual(capability["team:*"], ["subscribe"]);
       assert.deepEqual(capability["match:*"], ["subscribe"]);
+      assert.equal(capability["team:*"], undefined);
       assert.equal(JSON.stringify(response.body).includes("app.key:secret"), false);
     } finally {
       if (previousApiKey === undefined) {

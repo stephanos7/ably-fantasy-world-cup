@@ -92,7 +92,7 @@ Current channel patterns:
 ```text
 league:{leagueSlug}:leaderboard
 league:{leagueSlug}:activity
-team:{userSlug}
+league:{leagueSlug}:teams
 match:{matchSlug}
 ```
 
@@ -104,6 +104,9 @@ activity.created
 team.updated
 match.updated
 ```
+
+Client pages subscribe to the league-scoped teams channel and apply only
+`team.updated` messages whose payload `userSlug` matches the current client.
 
 ## Fork checklist
 

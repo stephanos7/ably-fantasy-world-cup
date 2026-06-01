@@ -10,3 +10,7 @@ For local browser testing with the Ably-hosted connector, use an internet-reacha
 The Ably-hosted connector must point to the same database as the API. Run `pnpm db:migrate` and `pnpm db:seed` before configuring or testing the connector so the LiveSync schema, app tables, and seeded demo rows exist.
 
 The frontend loads initial state over HTTP and then subscribes to Ably channels. It does not poll and does not calculate authoritative scores or ranks.
+
+Client team updates use the league-scoped `league:{leagueSlug}:teams` channel.
+Each `team.updated` payload includes `userSlug`, and client pages ignore updates
+for other users.

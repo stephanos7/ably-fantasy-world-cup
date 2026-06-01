@@ -46,12 +46,41 @@ After triggering a simulator event:
 
 ```sh
 psql "$DATABASE_URL" -c "
-select sequence_id, channel, name, processed
+select sequence_id, mutation_id, channel, name, processed
 from outbox
 order by sequence_id desc
 limit 10;
 "
 ```
+
+For one simulator event, the same `mutation_id` should have model updates for
+the match, league leaderboard, league activity feed, and each affected fantasy
+team:
+
+```sh
+psql "$DATABASE_URL" -c "
+select
+  sequence_id,
+  mutation_id,
+  channel,
+  name,
+  processed,
+  jsonb_pretty(data) as data
+from outbox
+where mutation_id = '<MUTATION_ID>'
+order by sequence_id;
+"
+```
+
+Expected rows include:
+
+- `league:friends:leaderboard` / `leaderboard.updated`
+- `league:friends:activity` / `activity.created`
+- `league:friends:teams` / `team.updated`
+- `match:france-england` / `match.updated`
+
+Client pages receive `team.updated` messages on the league-scoped teams channel
+and ignore messages whose payload `userSlug` does not match the route user.
 
 If rows are absent, check the API logs and confirm the simulator request completed successfully.
 

@@ -25,3 +25,10 @@ The backend owns fantasy scoring, fantasy team score updates, leaderboard
 ranking, activity feed generation, and LiveSync outbox writes. React clients
 render database-confirmed state and do not calculate authoritative scores or
 ranks.
+
+Each successful simulator event writes model updates for the affected realtime
+views in the same transaction: `match.updated`, `leaderboard.updated`,
+`activity.created`, and one `team.updated` per affected fantasy team owner.
+Team updates are published on `league:{leagueSlug}:teams`; client pages filter
+those messages by payload `userSlug`. All outbox rows for that simulator event
+share the same `simulator:<match_event_id>` mutation id.
