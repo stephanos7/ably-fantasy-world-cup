@@ -425,35 +425,47 @@ function LeaguePage() {
   );
   const handleLiveSyncMessage = useCallback(
     ({ name, data }) => {
-      if (name === 'leaderboard.updated') {
-        updateLeaderboardData((current) => {
-          if (data?.leagueSlug && data.leagueSlug !== leagueSlug) {
-            return current;
-          }
+      const payload = unwrapLiveSyncPayload(data);
 
+      if (name === 'leaderboard.updated') {
+        const entries = normalizeLeaderboardEntries(payload?.leaderboard ?? payload?.entries);
+
+        if (payload?.leagueSlug && payload.leagueSlug !== leagueSlug) {
+          return `ignored leaderboard for league ${payload.leagueSlug}`;
+        }
+
+        updateLeaderboardData((current) => {
           return {
             ...current,
-            leaderboard: normalizeLeaderboardEntries(data?.leaderboard)
+            leaderboard: entries
           };
         });
+
+        return `leaderboard replaced with ${entries.length} rows`;
       }
 
       if (name === 'activity.created') {
-        updateActivityData((current) => {
-          if (data?.leagueSlug && data.leagueSlug !== leagueSlug) {
-            return current;
-          }
+        const items = normalizeActivityItems(payload);
 
+        if (payload?.leagueSlug && payload.leagueSlug !== leagueSlug) {
+          return `ignored activity for league ${payload.leagueSlug}`;
+        }
+
+        updateActivityData((current) => {
           return {
             ...current,
-            items: mergeActivityItems(current.items, normalizeActivityItems(data))
+            items: mergeActivityItems(current.items, items)
           };
         });
+
+        return `activity merged with ${items.length} incoming item${items.length === 1 ? '' : 's'}`;
       }
+
+      return `ignored event ${name}`;
     },
     [leagueSlug, updateActivityData, updateLeaderboardData]
   );
-  const liveSyncStatus = useLiveSyncSubscriptions({
+  const liveSync = useLiveSyncSubscriptions({
     channels: liveSyncChannels,
     onMessage: handleLiveSyncMessage
   });
@@ -465,7 +477,7 @@ function LeaguePage() {
         title="League leaderboard"
         description="Initial standings load over HTTP; subsequent updates arrive through Ably LiveSync."
       />
-      <LiveSyncStatus status={liveSyncStatus} channels={liveSyncChannels} />
+      <LiveSyncStatus status={liveSync.status} channels={liveSyncChannels} debug={liveSync.debug} />
 
       <Grid container spacing={2}>
         <Grid size={{ xs: 12, md: 8 }}>
@@ -520,34 +532,42 @@ function ClientPage() {
   );
   const handleLiveSyncMessage = useCallback(
     ({ name, data }) => {
-      if (name === 'team.updated') {
-        updateClientData((current) => {
-          if (data?.userSlug && data.userSlug !== userSlug) {
-            return current;
-          }
+      const payload = unwrapLiveSyncPayload(data);
 
+      if (name === 'team.updated') {
+        if (payload?.userSlug && payload.userSlug !== userSlug) {
+          return `ignored team update for ${payload.userSlug}`;
+        }
+
+        updateClientData((current) => {
           return {
             ...current,
             team: {
               ...current.team,
-              slug: data?.teamSlug ?? current.team.slug,
-              name: data?.teamName ?? current.team.name,
-              points: Number(data?.points ?? data?.totalPoints ?? current.team.points),
-              rank: data?.rank ?? current.team.rank,
-              previousRank: data?.previousRank ?? current.team.previousRank,
-              rankDelta: data?.rankDelta ?? current.team.rankDelta,
-              lastEvent: data?.lastEvent ?? current.team.lastEvent,
-              updatedAt: data?.updatedAt ?? current.team.updatedAt
+              slug: payload?.teamSlug ?? current.team.slug,
+              name: payload?.teamName ?? current.team.name,
+              points: Number(payload?.points ?? payload?.totalPoints ?? current.team.points),
+              rank: payload?.rank ?? current.team.rank,
+              previousRank: payload?.previousRank ?? current.team.previousRank,
+              rankDelta: payload?.rankDelta ?? current.team.rankDelta,
+              lastEvent: payload?.lastEvent ?? current.team.lastEvent,
+              updatedAt: payload?.updatedAt ?? current.team.updatedAt
             }
           };
         });
+
+        return `team ${payload?.teamSlug ?? userSlug} updated`;
       }
 
       if (name === 'activity.created') {
+        let mergedCount = 0;
+
         updateClientData((current) => {
-          const incomingItems = normalizeActivityItems(data).filter(
+          const incomingItems = normalizeActivityItems(payload).filter(
             (item) => item.payload?.teamSlug === current.team.slug
           );
+
+          mergedCount = incomingItems.length;
 
           if (incomingItems.length === 0) {
             return current;
@@ -558,11 +578,17 @@ function ClientPage() {
             activity: mergeActivityItems(current.activity, incomingItems, 10)
           };
         });
+
+        return mergedCount > 0
+          ? `activity merged with ${mergedCount} matching item${mergedCount === 1 ? '' : 's'}`
+          : 'ignored activity with no matching team item';
       }
+
+      return `ignored event ${name}`;
     },
     [updateClientData, userSlug]
   );
-  const liveSyncStatus = useLiveSyncSubscriptions({
+  const liveSync = useLiveSyncSubscriptions({
     channels: liveSyncChannels,
     onMessage: handleLiveSyncMessage
   });
@@ -574,7 +600,7 @@ function ClientPage() {
         title="Team state"
         description="Initial team state loads over HTTP; subsequent score, rank, squad, and activity updates arrive through Ably LiveSync."
       />
-      <LiveSyncStatus status={liveSyncStatus} channels={liveSyncChannels} />
+      <LiveSyncStatus status={liveSync.status} channels={liveSyncChannels} debug={liveSync.debug} />
 
       <AsyncBlock state={clientState} emptyMessage="No team found for this user.">
         {(data) => (
@@ -643,24 +669,30 @@ function TvPage() {
   const liveSyncChannels = useMemo(() => [`league:${leagueSlug}:leaderboard`], [leagueSlug]);
   const handleLiveSyncMessage = useCallback(
     ({ name, data }) => {
+      const payload = unwrapLiveSyncPayload(data);
+
       if (name !== 'leaderboard.updated') {
-        return;
+        return `ignored event ${name}`;
+      }
+
+      const entries = normalizeLeaderboardEntries(payload?.leaderboard ?? payload?.entries);
+
+      if (payload?.leagueSlug && payload.leagueSlug !== leagueSlug) {
+        return `ignored leaderboard for league ${payload.leagueSlug}`;
       }
 
       updateLeaderboardData((current) => {
-        if (data?.leagueSlug && data.leagueSlug !== leagueSlug) {
-          return current;
-        }
-
         return {
           ...current,
-          leaderboard: normalizeLeaderboardEntries(data?.leaderboard)
+          leaderboard: entries
         };
       });
+
+      return `leaderboard replaced with ${entries.length} rows`;
     },
     [leagueSlug, updateLeaderboardData]
   );
-  const liveSyncStatus = useLiveSyncSubscriptions({
+  const liveSync = useLiveSyncSubscriptions({
     channels: liveSyncChannels,
     onMessage: handleLiveSyncMessage
   });
@@ -670,7 +702,7 @@ function TvPage() {
       <AsyncBlock state={leaderboardState} emptyMessage="No leaderboard entries yet.">
         {(data) => (
           <Stack spacing={3}>
-            <LiveSyncStatus status={liveSyncStatus} channels={liveSyncChannels} compact />
+            <LiveSyncStatus status={liveSync.status} channels={liveSyncChannels} debug={liveSync.debug} compact />
             <Stack spacing={0.5}>
               <Typography variant="overline" color="primary" sx={{ fontWeight: 800 }}>
                 TV leaderboard
@@ -721,6 +753,7 @@ function TvPage() {
 function DebugPage() {
   const healthState = useAsyncData(getHealth, []);
   const configState = useAsyncData(getApiConfig, []);
+  const liveSyncDebug = useLiveSyncDebugSnapshot();
 
   return (
     <Stack spacing={3}>
@@ -766,6 +799,23 @@ function DebugPage() {
                     </ListItem>
                   ))}
                 </List>
+              </Stack>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid size={{ xs: 12 }}>
+          <Card variant="outlined">
+            <CardContent>
+              <Stack spacing={2}>
+                <Typography component="h2" variant="h3">
+                  LiveSync debug
+                </Typography>
+                {liveSyncDebug ? (
+                  <CodeBlock value={liveSyncDebug} />
+                ) : (
+                  <EmptyState message="No LiveSync messages have been observed in this tab." />
+                )}
               </Stack>
             </CardContent>
           </Card>
@@ -909,13 +959,14 @@ function KeyValue({ label, value }) {
   );
 }
 
-function LiveSyncStatus({ status, channels, compact = false }) {
+function LiveSyncStatus({ status, channels, debug, compact = false }) {
   const label = liveSyncStatusLabel(status);
   const color = liveSyncStatusColor(status);
   const description =
     status === 'auth_failed'
       ? 'LiveSync is not configured. Add ABLY_API_KEY and configure the Ably Postgres connector.'
       : `${label} for ${channels.length} channel${channels.length === 1 ? '' : 's'}.`;
+  const lastMessage = debug?.lastMessage;
 
   if (compact) {
     return (
@@ -924,15 +975,36 @@ function LiveSyncStatus({ status, channels, compact = false }) {
         <Typography variant="body2" color="text.secondary">
           {description}
         </Typography>
+        {lastMessage ? (
+          <Typography variant="body2" color="text.secondary">
+            Last: {lastMessage.channel} / {lastMessage.name}
+          </Typography>
+        ) : null}
       </Stack>
     );
   }
 
   return (
     <Alert severity={status === 'connected' ? 'success' : status === 'auth_failed' ? 'error' : 'info'} icon={false}>
-      <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
-        <Chip label={label} color={color} size="small" />
-        <Typography variant="body2">{description}</Typography>
+      <Stack spacing={0.75}>
+        <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
+          <Chip label={label} color={color} size="small" />
+          <Typography variant="body2">{description}</Typography>
+        </Stack>
+        <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
+          {channels.map((channel) => (
+            <Chip key={channel} label={channel} size="small" variant="outlined" />
+          ))}
+        </Stack>
+        {lastMessage || debug?.lastMerge || debug?.lastError ? (
+          <Typography variant="body2" color="text.secondary">
+            {lastMessage
+              ? `Last message ${lastMessage.channel} / ${lastMessage.name} at ${formatTime(lastMessage.receivedAt)}. `
+              : ''}
+            {debug?.lastMerge ? `Merge: ${debug.lastMerge}. ` : ''}
+            {debug?.lastError ? `Error: ${debug.lastError}.` : ''}
+          </Typography>
+        ) : null}
       </Stack>
     </Alert>
   );
@@ -1074,24 +1146,132 @@ function useAsyncData(load, deps) {
   return { ...state, refresh, updateData };
 }
 
+function logLiveSync(message, details) {
+  if (import.meta.env.DEV) {
+    console.info(`[LiveSync] ${message}`, details ?? '');
+  }
+}
+
+function publishLiveSyncDebug(debug) {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  window.__ABLY_FWC_LIVESYNC_DEBUG__ = {
+    ...debug,
+    updatedAt: new Date().toISOString()
+  };
+  window.dispatchEvent(
+    new CustomEvent('ably-fwc-livesync-debug', {
+      detail: window.__ABLY_FWC_LIVESYNC_DEBUG__
+    })
+  );
+}
+
+function normalizeLiveSyncMessage(channel, message) {
+  const unwrappedData = unwrapLiveSyncPayload(message.data);
+  const name = message.name || unwrappedData?.name || 'unknown';
+  const data =
+    unwrappedData &&
+    typeof unwrappedData === 'object' &&
+    'data' in unwrappedData &&
+    (unwrappedData.name || unwrappedData.channel || unwrappedData.mutationId)
+      ? unwrapLiveSyncPayload(unwrappedData.data)
+      : unwrappedData;
+
+  return {
+    channel,
+    name,
+    data,
+    receivedAt: new Date().toISOString()
+  };
+}
+
+function unwrapLiveSyncPayload(data) {
+  if (typeof data === 'string') {
+    try {
+      return JSON.parse(data);
+    } catch {
+      return data;
+    }
+  }
+
+  return data;
+}
+
+function useLiveSyncDebugSnapshot() {
+  const [snapshot, setSnapshot] = useState(() =>
+    typeof window === 'undefined' ? null : window.__ABLY_FWC_LIVESYNC_DEBUG__ ?? null
+  );
+
+  useEffect(() => {
+    function handleDebugEvent(event) {
+      setSnapshot(event.detail);
+    }
+
+    window.addEventListener('ably-fwc-livesync-debug', handleDebugEvent);
+    return () => {
+      window.removeEventListener('ably-fwc-livesync-debug', handleDebugEvent);
+    };
+  }, []);
+
+  return snapshot;
+}
+
 function useLiveSyncSubscriptions({ channels, onMessage }) {
   const [status, setStatus] = useState('initialized');
+  const [debug, setDebug] = useState(() => ({
+    subscribedChannels: [],
+    lastMessage: null,
+    lastMerge: null,
+    lastError: null
+  }));
   const channelKey = channels.join('|');
 
   useEffect(() => {
     const activeChannels = Array.from(new Set(channels.filter(Boolean)));
 
+    setDebug((current) => ({
+      ...current,
+      subscribedChannels: activeChannels,
+      lastError: null
+    }));
+
     if (activeChannels.length === 0) {
       setStatus('initialized');
+      const nextDebug = {
+        subscribedChannels: [],
+        lastMessage: null,
+        lastMerge: 'no channels to subscribe',
+        lastError: null
+      };
+      setDebug(nextDebug);
+      publishLiveSyncDebug({ status: 'initialized', ...nextDebug });
       return undefined;
     }
 
     let client;
     let active = true;
+    const subscriptions = [];
+
+    logLiveSync('starting subscriptions', { channels: activeChannels });
 
     const handleConnectionState = (stateChange) => {
       if (active) {
+        logLiveSync('connection state changed', {
+          current: stateChange.current,
+          previous: stateChange.previous,
+          reason: stateChange.reason?.message
+        });
         setStatus(stateChange.current);
+        setDebug((current) => {
+          const next = {
+            ...current,
+            lastError: stateChange.reason?.message ?? current.lastError
+          };
+          publishLiveSyncDebug({ status: stateChange.current, ...next });
+          return next;
+        });
       }
     };
 
@@ -1113,17 +1293,78 @@ function useLiveSyncSubscriptions({ channels, onMessage }) {
               return;
             }
 
-            onMessage({
+            const normalizedMessage = normalizeLiveSyncMessage(channelName, message);
+            logLiveSync('message received', {
+              channel: normalizedMessage.channel,
+              name: normalizedMessage.name,
+              data: normalizedMessage.data
+            });
+
+            let mergeResult = 'message handled';
+
+            try {
+              mergeResult =
+                onMessage({
+                  channel: normalizedMessage.channel,
+                  name: normalizedMessage.name,
+                  data: normalizedMessage.data,
+                  rawMessage: message
+                }) ?? mergeResult;
+            } catch (error) {
+              mergeResult = `merge failed: ${error.message}`;
+              console.error('Failed to merge LiveSync message', error);
+            }
+
+            setDebug((current) => {
+              const next = {
+                ...current,
+                lastMessage: {
+                  channel: normalizedMessage.channel,
+                  name: normalizedMessage.name,
+                  receivedAt: normalizedMessage.receivedAt
+                },
+                lastMerge: mergeResult,
+                lastError: mergeResult.startsWith('merge failed') ? mergeResult : null
+              };
+              publishLiveSyncDebug({ status, ...next });
+              return next;
+            });
+
+            logLiveSync('message merge result', {
               channel: channelName,
-              name: message.name,
-              data: message.data
+              name: normalizedMessage.name,
+              result: mergeResult
             });
           };
 
-          channel.subscribe(listener).catch((error) => {
+          subscriptions.push({ channel, listener });
+
+          Promise.resolve(channel.subscribe(listener)).then(() => channel.attach()).then(() => {
+            logLiveSync('subscribed and attached to channel', { channel: channelName });
+            setDebug((current) => {
+              const subscribedChannels = Array.from(
+                new Set([...current.subscribedChannels, channelName])
+              );
+              const next = {
+                ...current,
+                subscribedChannels,
+                lastMerge: `subscribed and attached to ${channelName}`
+              };
+              publishLiveSyncDebug({ status, ...next });
+              return next;
+            });
+          }).catch((error) => {
             console.error(`Failed to subscribe to ${channelName}`, error);
             if (active) {
               setStatus('failed');
+              setDebug((current) => {
+                const next = {
+                  ...current,
+                  lastError: `Failed to subscribe to ${channelName}: ${error.message}`
+                };
+                publishLiveSyncDebug({ status: 'failed', ...next });
+                return next;
+              });
             }
           });
         }
@@ -1131,22 +1372,31 @@ function useLiveSyncSubscriptions({ channels, onMessage }) {
       .catch((error) => {
         console.error('Failed to start LiveSync client', error);
         if (active) {
-          setStatus(error.message?.includes('Unable to get Ably token') ? 'auth_failed' : 'failed');
+          const nextStatus = error.message?.includes('Unable to get Ably token') ? 'auth_failed' : 'failed';
+          setStatus(nextStatus);
+          setDebug((current) => {
+            const next = {
+              ...current,
+              lastError: error.message
+            };
+            publishLiveSyncDebug({ status: nextStatus, ...next });
+            return next;
+          });
         }
       });
     return () => {
       active = false;
       client?.connection.off(handleConnectionState);
 
-      for (const channelName of activeChannels) {
-        client?.channels.get(channelName).unsubscribe();
+      for (const { channel, listener } of subscriptions) {
+        channel.unsubscribe(listener);
       }
 
       client?.close();
     };
   }, [channelKey, onMessage]);
 
-  return status;
+  return { status, debug };
 }
 
 function normalizeLeaderboardEntries(entries) {
@@ -1231,6 +1481,18 @@ function formatDateTime(value) {
   return new Intl.DateTimeFormat(undefined, {
     dateStyle: 'medium',
     timeStyle: 'short'
+  }).format(new Date(value));
+}
+
+function formatTime(value) {
+  if (!value) {
+    return '-';
+  }
+
+  return new Intl.DateTimeFormat(undefined, {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
   }).format(new Date(value));
 }
 
