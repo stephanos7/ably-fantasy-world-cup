@@ -33,15 +33,61 @@ export function methodNotAllowed(allowedMethods) {
   );
 }
 
-export function getParam(event, name) {
-  const value = event.queryStringParameters?.[name];
+function getRequestPath(event) {
+  if (event.rawUrl) {
+    try {
+      return new URL(event.rawUrl).pathname;
+    } catch {
+      // Fall through to other path sources.
+    }
+  }
 
-  if (value) {
+  return event.rawPath || event.path || "";
+}
+
+export function getParam(event, name) {
+  const value =
+    event.queryStringParameters?.[name] ?? event.pathParameters?.[name];
+
+  if (typeof value === "string" && value.length > 0) {
     return value;
   }
 
-  const pathParts = event.path.split("/").filter(Boolean);
-  return pathParts.at(-1);
+  const pathParts = getRequestPath(event).split("/").filter(Boolean);
+
+  if (name === "leagueSlug") {
+    if (
+      pathParts.length >= 4 &&
+      pathParts[0] === "api" &&
+      pathParts[1] === "leagues" &&
+      (pathParts[3] === "activity" || pathParts[3] === "leaderboard")
+    ) {
+      return pathParts[2];
+    }
+  }
+
+  if (name === "userSlug") {
+    if (
+      pathParts.length >= 4 &&
+      pathParts[0] === "api" &&
+      pathParts[1] === "clients" &&
+      pathParts[3] === "team"
+    ) {
+      return pathParts[2];
+    }
+  }
+
+  if (name === "matchSlug") {
+    if (
+      pathParts.length >= 3 &&
+      pathParts[0] === "api" &&
+      pathParts[1] === "matches"
+    ) {
+      return pathParts[2];
+    }
+  }
+
+  return undefined;
 }
 
 export function parseJsonBody(event) {

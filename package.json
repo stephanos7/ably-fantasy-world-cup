@@ -8,7 +8,7 @@
     "dev": "netlify dev",
     "build": "netlify build",
     "lint": "node scripts/lint.mjs && node backend/scripts/lint.mjs && node apps/web/scripts/lint.mjs && node packages/shared/scripts/lint.mjs",
-    "test": "node packages/shared/scripts/test.mjs && NODE_ENV=test node --test --test-concurrency=1 backend/src/*.test.js backend/src/**/*.test.js && node apps/web/scripts/test.mjs",
+    "test": "node packages/shared/scripts/test.mjs && NODE_ENV=test node --test --test-concurrency=1 backend/src/*.test.js backend/src/**/*.test.js netlify/lib/*.test.js && node apps/web/scripts/test.mjs",
     "test:e2e": "node scripts/e2e-placeholder.mjs",
     "db:migrate": "node db/scripts/migrate.js",
     "db:seed": "node db/scripts/seed.js",
