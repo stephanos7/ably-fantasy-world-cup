@@ -61,17 +61,17 @@ const launcherCards = [
   {
     title: 'Control Room',
     route: '/control-room',
-    description: 'Trigger simulated match events and inspect the backend response.'
+    description: 'Start here. Trigger simulated match events and inspect the backend transaction response.'
   },
   {
     title: 'Client View',
     route: `/client/${demoUserSlug}`,
-    description: 'View a seeded manager, squad, score, rank, and recent activity.'
+    description: 'Keep this open beside the Control Room to watch one manager receive LiveSync updates.'
   },
   {
     title: 'League Table',
     route: `/league/${demoLeagueSlug}`,
-    description: 'Read the database-confirmed Friends League leaderboard.'
+    description: 'Watch the backend-ranked Friends League leaderboard update from database-confirmed state.'
   },
   {
     title: 'TV Mode',
@@ -279,8 +279,43 @@ function DemoLauncherPage() {
       <PageHeading
         eyebrow="Demo launcher"
         title="Choose a reference app view"
-        description="Use the Control Room to send simulator events, then inspect database-confirmed LiveSync updates across league and team views."
+        description="Open the Control Room first, then open a client, league, or TV view in another tab. Simulator clicks go to the API; visible score and rank changes arrive from database-confirmed LiveSync messages."
       />
+
+      <LiveSyncFlowExplanation />
+
+      <Card variant="outlined">
+        <CardContent>
+          <Stack spacing={2}>
+            <Typography component="h2" variant="h3">
+              First run checklist
+            </Typography>
+            <Grid container spacing={2}>
+              <Grid size={{ xs: 12, md: 4 }}>
+                <InstructionStep
+                  step="1"
+                  title="Open the Control Room"
+                  description="Use it as the simulated sports feed for France vs England."
+                />
+              </Grid>
+              <Grid size={{ xs: 12, md: 4 }}>
+                <InstructionStep
+                  step="2"
+                  title="Open live views"
+                  description="Keep Client, League, or TV tabs open so LiveSync updates are visible."
+                />
+              </Grid>
+              <Grid size={{ xs: 12, md: 4 }}>
+                <InstructionStep
+                  step="3"
+                  title="Click one event"
+                  description="The API writes Postgres state and outbox rows in one transaction."
+                />
+              </Grid>
+            </Grid>
+          </Stack>
+        </CardContent>
+      </Card>
 
       <Grid container spacing={2}>
         {launcherCards.map((card) => (
@@ -289,6 +324,62 @@ function DemoLauncherPage() {
           </Grid>
         ))}
       </Grid>
+    </Stack>
+  );
+}
+
+function LiveSyncFlowExplanation() {
+  return (
+    <Card variant="outlined">
+      <CardContent>
+        <Stack spacing={2}>
+          <Typography component="h2" variant="h3">
+            LiveSync flow
+          </Typography>
+          <Grid container spacing={2}>
+            <Grid size={{ xs: 12, md: 3 }}>
+              <InstructionStep
+                step="1"
+                title="Simulator input"
+                description="The Control Room posts a seeded match event to the Express API."
+              />
+            </Grid>
+            <Grid size={{ xs: 12, md: 3 }}>
+              <InstructionStep
+                step="2"
+                title="Backend truth"
+                description="The API scores affected teams and ranks the leaderboard."
+              />
+            </Grid>
+            <Grid size={{ xs: 12, md: 3 }}>
+              <InstructionStep
+                step="3"
+                title="Postgres commit"
+                description="App tables and LiveSync outbox rows are written together."
+              />
+            </Grid>
+            <Grid size={{ xs: 12, md: 3 }}>
+              <InstructionStep
+                step="4"
+                title="Synced views"
+                description="Ably LiveSync publishes confirmed updates to browser tabs."
+              />
+            </Grid>
+          </Grid>
+        </Stack>
+      </CardContent>
+    </Card>
+  );
+}
+
+function InstructionStep({ step, title, description }) {
+  return (
+    <Stack spacing={1} sx={{ height: '100%' }}>
+      <Chip label={step} color="primary" size="small" sx={{ alignSelf: 'flex-start', fontWeight: 800 }} />
+      <Typography component="h3" variant="h3">
+        {title}
+      </Typography>
+      <Typography color="text.secondary">{description}</Typography>
     </Stack>
   );
 }
@@ -340,7 +431,7 @@ function ControlRoomPage() {
       <PageHeading
         eyebrow="Control room"
         title="France vs England"
-        description="This simulates an upstream match data source."
+        description="This page is the demo's simulated upstream match feed. Click one event to send an HTTP command to the backend; the other views should change only after LiveSync publishes the resulting database state."
       />
 
       {submitError ? <Alert severity="error">{submitError}</Alert> : null}
@@ -351,7 +442,11 @@ function ControlRoomPage() {
             <CardContent>
               <Stack spacing={2}>
                 <Typography component="h2" variant="h3">
-                  Simulator events
+                  Send simulator event
+                </Typography>
+                <Typography color="text.secondary">
+                  These buttons are inputs, not final state. The API validates the event, recalculates scores and
+                  ranks, writes Postgres tables, and inserts LiveSync outbox rows in the same transaction.
                 </Typography>
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} flexWrap="wrap">
                   {simulatorActions.map((action) => (
@@ -364,6 +459,27 @@ function ControlRoomPage() {
                       {pendingAction === action.label ? 'Sending...' : action.label}
                     </Button>
                   ))}
+                </Stack>
+                <Divider />
+                <Stack spacing={1}>
+                  <Typography component="h3" variant="h3">
+                    Watch the result
+                  </Typography>
+                  <Typography color="text.secondary">
+                    Open the live views below in separate tabs before clicking an event. Their scores and ranks come
+                    from LiveSync messages, not frontend calculations.
+                  </Typography>
+                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} flexWrap="wrap">
+                    <Button component={RouterLink} to={`/client/${demoUserSlug}`} variant="outlined">
+                      Open client tab
+                    </Button>
+                    <Button component={RouterLink} to={`/league/${demoLeagueSlug}`} variant="outlined">
+                      Open league tab
+                    </Button>
+                    <Button component={RouterLink} to={`/tv/${demoLeagueSlug}`} variant="outlined">
+                      Open TV tab
+                    </Button>
+                  </Stack>
                 </Stack>
                 <Divider />
                 <AsyncBlock state={matchState} emptyMessage="No match summary available.">
@@ -381,6 +497,10 @@ function ControlRoomPage() {
                 <Stack spacing={2}>
                   <Typography component="h2" variant="h3">
                     Latest API response
+                  </Typography>
+                  <Typography color="text.secondary">
+                    This is the immediate HTTP response from the simulator command. LiveSync delivery is visible in
+                    the Client, League, TV, and Debug views.
                   </Typography>
                   {latestResponse ? (
                     <Stack spacing={2}>

@@ -101,4 +101,5 @@ docs/
 - [Ably LiveSync details](docs/livesync.md)
 - [Troubleshooting](docs/troubleshooting.md)
 - [Architecture](docs/architecture.md)
+- [Customization guide](docs/customization.md)
 - [Deployment](docs/deployment.md)
