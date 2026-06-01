@@ -64,7 +64,7 @@ The app requires:
 - `ABLY_API_KEY` available only to Netlify Functions for browser-safe Ably token auth.
 - The Ably-hosted Postgres connector configured against the same Neon database.
 
-Docker Postgres, a standalone REST API server, Render API deployment, and HTTP-only local mode are not supported runtime paths.
+Docker Postgres and HTTP-only local mode are not supported runtime paths.
 
 ## Commands
 

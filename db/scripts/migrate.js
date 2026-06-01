@@ -1,5 +1,5 @@
+import "dotenv/config";
 import { promises as fs } from "fs";
-import { createRequire } from "module";
 import path from "path";
 import { fileURLToPath } from "url";
 import { createDatabasePool } from "../../backend/src/db/pool.js";
@@ -7,12 +7,6 @@ import { describeDatabaseTarget, requireDatabaseUrl } from "./database-url.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const requireFromApi = createRequire(
-  path.resolve(__dirname, "..", "..", "apps", "api", "package.json")
-);
-const dotenv = requireFromApi("dotenv");
-
-dotenv.config({ path: path.resolve(__dirname, "..", "..", ".env") });
 
 const migrationsDir = path.resolve(__dirname, "..", "migrations");
 function createPool(databaseUrl) {

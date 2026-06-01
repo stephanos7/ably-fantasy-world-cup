@@ -82,7 +82,7 @@ Expected rows include:
 Client pages receive `team.updated` messages on the league-scoped teams channel
 and ignore messages whose payload `userSlug` does not match the route user.
 
-If rows are absent, check the API logs and confirm the simulator request completed successfully.
+If rows are absent, check the Netlify Function logs and confirm the simulator request completed successfully.
 
 ## Browser Receives Ably
 
