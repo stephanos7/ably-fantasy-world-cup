@@ -1,6 +1,8 @@
 import { createRequire } from "module";
 import path from "path";
 import { fileURLToPath } from "url";
+import { createDatabasePool } from "../../apps/api/src/db/pool.js";
+import { describeDatabaseTarget, requireDatabaseUrl } from "./database-url.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -8,20 +10,18 @@ const requireFromApi = createRequire(
   path.resolve(__dirname, "..", "..", "apps", "api", "package.json")
 );
 const dotenv = requireFromApi("dotenv");
-const { Pool } = requireFromApi("pg");
 
 dotenv.config({ path: path.resolve(__dirname, "..", "..", ".env") });
 
-const databaseUrl =
-  process.env.DATABASE_URL ||
-  "postgres://postgres:postgres@localhost:5432/ably_fantasy_world_cup";
-
-function createPool() {
-  return new Pool({ connectionString: databaseUrl });
+function createPool(databaseUrl) {
+  return createDatabasePool({ databaseUrl });
 }
 
-export async function runSeed() {
-  const pool = createPool();
+export async function runSeed({ databaseUrl = requireDatabaseUrl() } = {}) {
+  const target = describeDatabaseTarget(databaseUrl);
+  console.log(`Seed target: ${target.host}/${target.database}`);
+
+  const pool = createPool(databaseUrl);
   const client = await pool.connect();
 
   try {

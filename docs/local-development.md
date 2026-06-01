@@ -1,97 +1,87 @@
-# Local development
+# Local Development
 
-This project uses Postgres in Docker for local development. The database connection is configured with `DATABASE_URL` in `.env`.
+Local development runs the React app and Express API on your machine, but the database is Neon and realtime delivery is Ably LiveSync.
+
+Docker Postgres is not the supported app path for this Ably LiveSync demo. The supported path is local app services plus an internet-reachable Postgres database that the Ably-hosted connector can reach.
 
 ## Setup
 
-1. Copy the example environment variables:
+1. Create a Neon project and database.
+2. Copy the Neon Postgres connection string and include `sslmode=require`.
+3. Copy the example environment file.
 
 ```sh
 cp .env.example .env
 ```
 
-2. Start Postgres:
+4. Set the required environment variables.
 
-```sh
-docker compose up -d
+```env
+PORT=4000
+DATABASE_URL=postgresql://USER:PASSWORD@HOST/DB?sslmode=require
+ABLY_API_KEY=your-ably-api-key
+VITE_API_BASE_URL=http://localhost:4000
 ```
 
-3. Install dependencies:
+5. Install dependencies.
 
 ```sh
 pnpm install
 ```
 
-## Database migrations
-
-Run migrations after Postgres is available:
+6. Run migrations against Neon.
 
 ```sh
 pnpm db:migrate
 ```
 
-This will apply all SQL migration files from `db/migrations/` and record them in `schema_migrations`.
-
-## Seeding data
-
-Seed the local database with stable demo data:
+7. Seed Neon.
 
 ```sh
 pnpm db:seed
 ```
 
-The seed script is idempotent and can be re-run safely.
+8. Configure the Ably-hosted Postgres connector against the same Neon database in `DATABASE_URL`.
 
-## Inspecting the database with a GUI
+9. Start the API and frontend.
 
-You can inspect the local Postgres database with any Postgres-compatible desktop client. Common options include TablePlus, DBeaver, Postico, pgAdmin, and Beekeeper Studio.
+```sh
+pnpm dev:api
+pnpm dev:web
+```
 
-Use these local connection values:
+## Browser Demo
 
-| Field | Value |
+Open these routes in separate tabs:
+
+| Route | Purpose |
 | --- | --- |
-| Host | `localhost` |
-| Port | `5432` |
-| Database | `ably_fantasy_world_cup` |
-| User | `postgres` |
-| Password | `postgres` |
+| `/control-room` | Trigger seeded France vs England simulator events. |
+| `/league/friends` | View backend-ranked league standings and activity. |
+| `/client/stephanos` | View one seeded user's team, squad, rank, score, and activity. |
+| `/tv/friends` | View a larger read-only leaderboard. |
+| `/debug` | Check API, Neon, and Ably LiveSync configuration. |
 
-For Postico, create a new favorite and use the same values:
+Click `Mbappé goal` in `/control-room`. The league, client, and TV tabs should update without refresh when the connector is reading outbox rows from the same Neon database.
 
-| Postico field | Value |
-| --- | --- |
-| Nickname | Optional, for example `Ably Fantasy World Cup Local` |
-| Host | `localhost` |
-| Port | `5432` |
-| Database | `ably_fantasy_world_cup` |
-| User | `postgres` |
-| Password | `postgres` |
+The frontend uses HTTP for initial state and simulator actions. Subsequent updates must arrive through Ably LiveSync.
 
-Leave SSH Tunnel, Startup Query, and Pre-Connect Shell Script disabled for the local Docker database.
+## Database Inspection
 
-## Resetting the local database
+Use any Postgres-compatible GUI with the Neon connection details, or run:
 
-Reset is only permitted in non-production environments by default.
+```sh
+pnpm db:inspect
+```
+
+`db:inspect` prints the target host, database name, required LiveSync object checks, seeded match check, and core table counts.
+
+## Resetting Neon
+
+Reset is destructive and targets the `DATABASE_URL` database. It refuses `NODE_ENV=production`, requires `ALLOW_DB_RESET=true`, and prints only the target host and database name.
 
 ```sh
 ALLOW_DB_RESET=true pnpm db:reset --seed
 ```
 
-If `NODE_ENV=production`, the reset script will refuse to run unless `ALLOW_DB_RESET=true` is explicitly set.
-
-## Troubleshooting
-
-If a desktop GUI cannot connect to Postgres, confirm Docker is running and the Postgres container is healthy:
-
-```sh
-docker compose ps
-docker compose logs postgres
-```
-
-## Verification
-
-1. Confirm Postgres is healthy with `docker compose ps`.
-2. Run `pnpm db:migrate`.
-3. Run `pnpm db:seed`.
-4. Re-run `pnpm db:seed` to verify idempotency.
-5. Reset with `ALLOW_DB_RESET=true pnpm db:reset --seed` to verify the guarded reset flow.
+Do not run reset against a shared or production database.

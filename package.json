@@ -6,13 +6,16 @@
   "type": "module",
   "scripts": {
     "dev": "corepack pnpm --parallel --filter web --filter api dev",
+    "dev:api": "corepack pnpm --filter api dev",
+    "dev:web": "corepack pnpm --filter web dev",
     "build": "corepack pnpm -r --if-present build",
     "lint": "node scripts/lint.mjs && corepack pnpm -r --if-present lint",
     "test": "corepack pnpm -r --if-present test",
     "test:e2e": "node scripts/e2e-placeholder.mjs",
     "db:migrate": "corepack pnpm --filter api exec -- node ../../db/scripts/migrate.js",
     "db:seed": "corepack pnpm --filter api exec -- node ../../db/scripts/seed.js",
-    "db:reset": "corepack pnpm --filter api exec -- node ../../db/scripts/reset.js"
+    "db:reset": "corepack pnpm --filter api exec -- node ../../db/scripts/reset.js",
+    "db:inspect": "corepack pnpm --filter api exec -- node ../../db/scripts/inspect.js"
   },
   "engines": {
     "node": ">=20.0.0",

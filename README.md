@@ -1,16 +1,83 @@
 # Ably Fantasy World Cup
 
-A public, forkable Ably reference app for a fantasy football experience powered by Postgres and Ably LiveSync.
+A public, forkable Ably reference app for a fantasy football experience powered by Neon Postgres and Ably LiveSync.
 
-This repository is currently an initial monorepo skeleton. Product functionality is intentionally not implemented yet.
-
-## What This App Will Demonstrate
+## What This App Demonstrates
 
 - Simulated match events enter the backend as inputs.
 - Postgres stores the confirmed application state.
 - Backend transactions update app tables and write LiveSync outbox records together.
 - Ably LiveSync distributes database-confirmed state to React clients.
 - The frontend renders synced state and does not calculate fantasy scoring or leaderboard truth.
+
+HTTP is used for initial reads and simulator actions only. Realtime updates are delivered through Ably LiveSync from database-backed outbox messages.
+
+## Quick Start
+
+1. Create a Neon database and copy its Postgres connection string with `sslmode=require`.
+2. Copy `.env.example` to `.env` and set `DATABASE_URL`, `ABLY_API_KEY`, and `VITE_API_BASE_URL`.
+3. Run migrations and seed against Neon.
+4. Create an Ably app.
+5. Configure the Ably-hosted LiveSync Postgres connector against the same Neon database.
+6. Start the API and frontend.
+7. Open multiple browser tabs and trigger a simulator event.
+
+```sh
+pnpm install
+cp .env.example .env
+pnpm db:migrate
+pnpm db:seed
+pnpm dev:api
+pnpm dev:web
+```
+
+The web app runs on `http://localhost:5173` and the API runs on `http://localhost:4000`.
+
+Seeded demo routes:
+
+- `http://localhost:5173/control-room`
+- `http://localhost:5173/league/friends`
+- `http://localhost:5173/client/stephanos`
+- `http://localhost:5173/tv/friends`
+- `http://localhost:5173/debug`
+
+Open `/control-room`, `/league/friends`, `/client/stephanos`, and `/tv/friends` in separate tabs. Click `Mbappé goal` in the control room and confirm the other tabs update without refresh.
+
+## Required Runtime Path
+
+```text
+React app
+-> Express API
+-> Neon Postgres
+-> Ably-hosted LiveSync Postgres connector
+-> Ably
+-> browser clients
+```
+
+The app requires:
+
+- `DATABASE_URL` pointing to an internet-reachable Postgres database, documented with Neon.
+- `ABLY_API_KEY` on the API server for browser-safe Ably token auth.
+- The Ably-hosted Postgres connector configured against the same database as the API.
+
+Docker Postgres is not the supported app path for this Ably LiveSync demo. It may exist only for internal experimentation or test infrastructure.
+
+## Commands
+
+```sh
+pnpm dev
+pnpm dev:api
+pnpm dev:web
+pnpm db:migrate
+pnpm db:seed
+pnpm db:inspect
+ALLOW_DB_RESET=true pnpm db:reset --seed
+pnpm lint
+pnpm test
+pnpm test:e2e
+```
+
+`pnpm db:reset` refuses `NODE_ENV=production` and requires `ALLOW_DB_RESET=true`. It prints only the target host and database name, never credentials.
 
 ## Workspace Layout
 
@@ -26,63 +93,12 @@ db/
 docs/
 ```
 
-## Prerequisites
+## Documentation
 
-- Node.js 20 or newer
-- pnpm 9 or newer
-- Docker, for local Postgres
-
-## Local Run
-
-```sh
-pnpm install
-cp .env.example .env
-docker compose up -d postgres
-pnpm db:migrate
-pnpm dev
-```
-
-The web app runs on `http://localhost:5173` and the API runs on `http://localhost:4000`.
-
-To inspect the local database visually, connect with any Postgres GUI using the local credentials in [docs/local-development.md](docs/local-development.md).
-
-## Hosted Demo
-
-The hosted demo path is expected to use:
-
-- a hosted web deployment for `apps/web`
-- a hosted Node service for `apps/api`
-- Neon Postgres or another managed Postgres provider
-- Ably LiveSync configured against the production database
-
-The production demo URL will be documented here once the app is implemented and deployed.
-
-## Deploy Your Own
-
-1. Fork this repository.
-2. Provision a Postgres database, such as Neon.
-3. Configure Ably and the LiveSync Postgres connector.
-4. Set environment variables from `.env.example` in your hosting provider.
-5. Deploy `apps/api` as a Node.js service.
-6. Deploy `apps/web` as a static Vite build.
-7. Run database migrations against your production database.
-
-Detailed deployment docs will live in [docs/deployment.md](docs/deployment.md).
-
-## Commands
-
-```sh
-pnpm dev
-pnpm --filter web dev
-pnpm --filter api dev
-pnpm db:migrate
-pnpm db:seed
-pnpm db:reset
-pnpm lint
-pnpm test
-pnpm test:e2e
-```
-
-## Status
-
-This is scaffold-only. The next implementation steps are described in [docs/architecture.md](docs/architecture.md) and [docs/livesync.md](docs/livesync.md).
+- [Local development with Neon and Ably](docs/local-development.md)
+- [Neon + Ably LiveSync setup](docs/local-livesync-neon.md)
+- [Ably LiveSync connector setup](docs/setup-ably-livesync.md)
+- [Ably LiveSync details](docs/livesync.md)
+- [Troubleshooting](docs/troubleshooting.md)
+- [Architecture](docs/architecture.md)
+- [Deployment](docs/deployment.md)

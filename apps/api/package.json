@@ -7,10 +7,11 @@
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
     "lint": "node scripts/lint.mjs",
-    "test": "node --test"
+    "test": "NODE_ENV=test node --test --test-concurrency=1"
   },
   "dependencies": {
     "@ably-fantasy-world-cup/shared": "workspace:*",
+    "ably": "^2.21.0",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",

@@ -3,6 +3,8 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { runMigrations } from "./migrate.js";
 import { runSeed } from "./seed.js";
+import { createDatabasePool } from "../../apps/api/src/db/pool.js";
+import { describeDatabaseTarget, requireDatabaseUrl } from "./database-url.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -10,16 +12,11 @@ const requireFromApi = createRequire(
   path.resolve(__dirname, "..", "..", "apps", "api", "package.json")
 );
 const dotenv = requireFromApi("dotenv");
-const { Pool } = requireFromApi("pg");
 
 dotenv.config({ path: path.resolve(__dirname, "..", "..", ".env") });
 
-const databaseUrl =
-  process.env.DATABASE_URL ||
-  "postgres://postgres:postgres@localhost:5432/ably_fantasy_world_cup";
-
-function createPool() {
-  return new Pool({ connectionString: databaseUrl });
+function createPool(databaseUrl) {
+  return createDatabasePool({ databaseUrl });
 }
 
 function shouldAllowReset() {
@@ -27,21 +24,27 @@ function shouldAllowReset() {
   const allowDbReset =
     process.env.ALLOW_DB_RESET === "true" || process.env.ALLOW_DB_RESET === "1";
 
-  if (env === "production" && !allowDbReset) {
+  if (env === "production") {
     return false;
   }
 
-  return true;
+  return allowDbReset;
 }
 
-export async function runReset({ seed = false } = {}) {
+export async function runReset({
+  seed = false,
+  databaseUrl = requireDatabaseUrl()
+} = {}) {
   if (!shouldAllowReset()) {
     throw new Error(
-      "Database reset is not allowed in production without ALLOW_DB_RESET=true. Set NODE_ENV to a non-production value or export ALLOW_DB_RESET=true."
+      "Database reset is not allowed. Reset refuses NODE_ENV=production and requires ALLOW_DB_RESET=true for hosted database safety."
     );
   }
 
-  const pool = createPool();
+  const target = describeDatabaseTarget(databaseUrl);
+  console.log(`Reset target: ${target.host}/${target.database}`);
+
+  const pool = createPool(databaseUrl);
   const client = await pool.connect();
 
   try {
@@ -51,11 +54,11 @@ export async function runReset({ seed = false } = {}) {
     await client.query("COMMIT");
 
     console.log("Schema reset; running migrations...");
-    await runMigrations();
+    await runMigrations({ databaseUrl });
 
     if (seed) {
       console.log("Seeding after reset...");
-      await runSeed();
+      await runSeed({ databaseUrl });
     }
 
     console.log("Database reset complete.");

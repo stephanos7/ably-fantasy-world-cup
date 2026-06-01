@@ -1,9 +1,13 @@
 # Deployment
 
-The app is designed to support three paths:
+The app is designed around one runtime path:
 
-- hosted demo maintained by the project
-- local development with Docker Postgres
-- deploy-your-own with hosted web, hosted API, Neon Postgres, and Ably LiveSync
+- React web deployment
+- Node API deployment
+- Neon Postgres or another internet-reachable compatible Postgres database
+- Ably-hosted LiveSync Postgres connector
+- Ably browser subscriptions using API-issued token requests
 
-Deployment-specific commands and provider examples will be added when the application behavior exists.
+Run `pnpm db:migrate` and `pnpm db:seed` against the deployment database before testing LiveSync. Configure the Ably-hosted connector against that same database.
+
+Do not expose `ABLY_API_KEY` to the browser. The browser must request Ably auth material from `/api/ably/token`.

@@ -5,11 +5,13 @@ import { app } from "./server.js";
 import { createDatabasePool } from "./db/pool.js";
 import { runReset } from "../../../db/scripts/reset.js";
 
-const databaseUrl =
-  process.env.DATABASE_URL ||
-  "postgres://postgres:postgres@localhost:5432/ably_fantasy_world_cup";
+const databaseUrl = process.env.TEST_DATABASE_URL;
 
 async function canConnectToDatabase() {
+  if (!databaseUrl) {
+    return false;
+  }
+
   const pool = createDatabasePool({ databaseUrl });
 
   try {
@@ -55,7 +57,8 @@ async function getOutboxRows() {
 
 describe("POST /api/simulator/events", { skip: !hasDatabase }, () => {
   beforeEach(async () => {
-    await runReset({ seed: true });
+    process.env.ALLOW_DB_RESET = "true";
+    await runReset({ seed: true, databaseUrl });
     pool = createDatabasePool({ databaseUrl });
     app.locals.db = pool;
   });
