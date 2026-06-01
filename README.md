@@ -38,6 +38,15 @@ pnpm dev
 
 By default, `pnpm dev` runs `netlify dev`. The frontend uses same-origin `/api/...` requests that Netlify redirects to Functions.
 
+The root `.env` file must include `DATABASE_URL` and `ABLY_API_KEY` for Netlify Functions. If Netlify CLI does not load `.env` in your shell, run:
+
+```sh
+set -a
+source .env
+set +a
+pnpm dev
+```
+
 ## Required Runtime Path
 
 ```text
@@ -77,8 +86,8 @@ pnpm test:e2e
 
 ```text
 apps/
-  api/      Shared backend modules for Netlify Functions
   web/      React + Vite web client
+backend/    Shared backend modules for Netlify Functions
 netlify/
   functions/
 packages/

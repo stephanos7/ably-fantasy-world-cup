@@ -2,7 +2,7 @@ import { promises as fs } from "fs";
 import { createRequire } from "module";
 import path from "path";
 import { fileURLToPath } from "url";
-import { createDatabasePool } from "../../apps/api/src/db/pool.js";
+import { createDatabasePool } from "../../backend/src/db/pool.js";
 import { describeDatabaseTarget, requireDatabaseUrl } from "./database-url.js";
 
 const __filename = fileURLToPath(import.meta.url);

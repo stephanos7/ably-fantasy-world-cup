@@ -93,3 +93,14 @@ In DevTools:
 - The UI should show `LiveSync connected`.
 
 If the UI shows a setup error, confirm `ABLY_API_KEY` is set for Netlify Functions and the connector points to the same Neon database as `DATABASE_URL`.
+
+Under `netlify dev`, `/api/config` should report `databaseConfigured=true` and
+`ablyConfigured=true`. If either value is false despite a populated root `.env`,
+start dev with exported environment variables:
+
+```sh
+set -a
+source .env
+set +a
+pnpm dev
+```

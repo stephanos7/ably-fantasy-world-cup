@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { afterEach, beforeEach, describe, it } from "node:test";
 import { createDatabasePool } from "./db/pool.js";
 import { postSimulatorEvent as processSimulatorEvent } from "./http/simulator.js";
-import { runReset } from "../../../db/scripts/reset.js";
+import { runReset } from "../../db/scripts/reset.js";
 
 const databaseUrl = process.env.TEST_DATABASE_URL;
 

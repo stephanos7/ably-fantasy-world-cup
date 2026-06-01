@@ -1,4 +1,4 @@
-import { createDatabasePool } from "../../apps/api/src/db/pool.js";
+import { createDatabasePool } from "../../backend/src/db/pool.js";
 
 let pool;
 

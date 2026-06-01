@@ -14,11 +14,22 @@ Docker Postgres is not a supported app path. The Ably-hosted connector must read
 cp .env.example .env
 ```
 
-4. Set the required server-side variables.
+4. Set the required server-side variables in the root `.env` file.
 
 ```env
 DATABASE_URL=postgresql://USER:PASSWORD@HOST/DB?sslmode=require
 ABLY_API_KEY=your-ably-api-key
+```
+
+Netlify dev normally injects variables from the root `.env` file. If your local
+shell or Netlify CLI version does not load them reliably, export the file before
+starting the app:
+
+```sh
+set -a
+source .env
+set +a
+pnpm dev
 ```
 
 5. Install dependencies.

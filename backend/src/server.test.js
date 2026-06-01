@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { assertRuntimeEnv } from "./http/config.js";
-import { handler as healthHandler } from "../../../netlify/functions/health.js";
-import { handler as configHandler } from "../../../netlify/functions/config.js";
-import { handler as ablyTokenHandler } from "../../../netlify/functions/ably-token.js";
+import { handler as healthHandler } from "../../netlify/functions/health.js";
+import { handler as configHandler } from "../../netlify/functions/config.js";
+import { handler as ablyTokenHandler } from "../../netlify/functions/ably-token.js";
 
 async function invoke(handler, { method = "GET", body } = {}) {
   const response = await handler({
@@ -40,6 +40,36 @@ describe("Netlify function shell", () => {
     assert.equal(typeof response.json.database.configured, "boolean");
     assert.equal(typeof response.json.ably.configured, "boolean");
     assert.equal(response.json.livesync.mode, "required");
+  });
+
+  it("GET /api/config reports configured env when root env is loaded", async () => {
+    const previousDatabaseUrl = process.env.DATABASE_URL;
+    const previousApiKey = process.env.ABLY_API_KEY;
+    process.env.DATABASE_URL =
+      "postgresql://user:password@example.com/db?sslmode=require";
+    process.env.ABLY_API_KEY = "app.key:secret";
+
+    try {
+      const response = await invoke(configHandler);
+
+      assert.equal(response.statusCode, 200);
+      assert.equal(response.json.database.configured, true);
+      assert.equal(response.json.database.target.host, "example.com");
+      assert.equal(response.json.ably.configured, true);
+      assert.equal(JSON.stringify(response.json).includes("app.key:secret"), false);
+    } finally {
+      if (previousDatabaseUrl === undefined) {
+        delete process.env.DATABASE_URL;
+      } else {
+        process.env.DATABASE_URL = previousDatabaseUrl;
+      }
+
+      if (previousApiKey === undefined) {
+        delete process.env.ABLY_API_KEY;
+      } else {
+        process.env.ABLY_API_KEY = previousApiKey;
+      }
+    }
   });
 
   it("GET /api/ably/token returns 503 when Ably auth is not configured", async () => {

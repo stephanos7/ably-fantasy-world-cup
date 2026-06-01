@@ -2,21 +2,36 @@
   "name": "ably-fantasy-world-cup",
   "version": "0.0.0",
   "private": true,
-  "description": "Public Ably LiveSync fantasy football reference app monorepo.",
+  "description": "Public Ably LiveSync fantasy football reference app.",
   "type": "module",
   "scripts": {
-    "dev": "netlify dev --filter web",
-    "build": "netlify build --filter web",
-    "lint": "node scripts/lint.mjs && corepack pnpm -r --if-present lint",
-    "test": "corepack pnpm -r --if-present test",
+    "dev": "netlify dev",
+    "build": "netlify build",
+    "lint": "node scripts/lint.mjs && node backend/scripts/lint.mjs && node apps/web/scripts/lint.mjs && node packages/shared/scripts/lint.mjs",
+    "test": "node packages/shared/scripts/test.mjs && NODE_ENV=test node --test --test-concurrency=1 backend/src/*.test.js backend/src/**/*.test.js && node apps/web/scripts/test.mjs",
     "test:e2e": "node scripts/e2e-placeholder.mjs",
-    "db:migrate": "corepack pnpm --filter api exec -- node ../../db/scripts/migrate.js",
-    "db:seed": "corepack pnpm --filter api exec -- node ../../db/scripts/seed.js",
-    "db:reset": "corepack pnpm --filter api exec -- node ../../db/scripts/reset.js",
-    "db:inspect": "corepack pnpm --filter api exec -- node ../../db/scripts/inspect.js"
+    "db:migrate": "node db/scripts/migrate.js",
+    "db:seed": "node db/scripts/seed.js",
+    "db:reset": "node db/scripts/reset.js",
+    "db:inspect": "node db/scripts/inspect.js"
+  },
+  "dependencies": {
+    "@ably-fantasy-world-cup/shared": "file:packages/shared",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
+    "@mui/material": "^7.1.0",
+    "ably": "^2.21.0",
+    "dotenv": "^16.5.0",
+    "pg": "^8.16.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-router-dom": "^7.6.0",
+    "zod": "^3.25.0"
   },
   "devDependencies": {
-    "netlify-cli": "^17.38.1"
+    "@vitejs/plugin-react": "^4.5.0",
+    "netlify-cli": "^17.38.1",
+    "vite": "^6.3.0"
   },
   "engines": {
     "node": ">=20.0.0",

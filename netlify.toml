@@ -1,10 +1,10 @@
 [build]
-  command = "corepack pnpm --filter web build"
+  command = "corepack pnpm exec vite build --config apps/web/vite.config.js"
   publish = "apps/web/dist"
   functions = "netlify/functions"
 
 [dev]
-  command = "corepack pnpm --filter web dev"
+  command = "corepack pnpm exec vite --config apps/web/vite.config.js --host 0.0.0.0"
   port = 8888
   targetPort = 5173
   framework = "#custom"

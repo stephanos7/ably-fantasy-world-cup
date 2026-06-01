@@ -7,34 +7,10 @@ settings:
 importers:
 
   .:
-    devDependencies:
-      netlify-cli:
-        specifier: ^17.38.1
-        version: 17.38.1(@types/node@25.9.1)(picomatch@4.0.4)(rollup@4.60.4)
-
-  apps/api:
     dependencies:
       '@ably-fantasy-world-cup/shared':
-        specifier: workspace:*
-        version: link:../../packages/shared
-      ably:
-        specifier: ^2.21.0
-        version: 2.21.0(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
-      dotenv:
-        specifier: ^16.5.0
-        version: 16.6.1
-      pg:
-        specifier: ^8.16.0
-        version: 8.21.0
-      zod:
-        specifier: ^3.25.0
-        version: 3.25.76
-
-  apps/web:
-    dependencies:
-      '@ably-fantasy-world-cup/shared':
-        specifier: workspace:*
-        version: link:../../packages/shared
+        specifier: file:packages/shared
+        version: file:packages/shared
       '@emotion/react':
         specifier: ^11.14.0
         version: 11.14.0(@types/react@19.2.15)(react@19.2.6)
@@ -47,6 +23,12 @@ importers:
       ably:
         specifier: ^2.21.0
         version: 2.21.0(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+      dotenv:
+        specifier: ^16.5.0
+        version: 16.6.1
+      pg:
+        specifier: ^8.16.0
+        version: 8.21.0
       react:
         specifier: ^19.1.0
         version: 19.2.6
@@ -56,17 +38,24 @@ importers:
       react-router-dom:
         specifier: ^7.6.0
         version: 7.16.0(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+      zod:
+        specifier: ^3.25.0
+        version: 3.25.76
     devDependencies:
       '@vitejs/plugin-react':
         specifier: ^4.5.0
         version: 4.7.0(vite@6.4.2(@types/node@25.9.1)(jiti@2.7.0)(yaml@2.9.0))
+      netlify-cli:
+        specifier: ^17.38.1
+        version: 17.38.1(@types/node@25.9.1)(picomatch@4.0.4)(rollup@4.60.4)
       vite:
         specifier: ^6.3.0
         version: 6.4.2(@types/node@25.9.1)(jiti@2.7.0)(yaml@2.9.0)
 
-  packages/shared: {}
-
 packages:
+
+  '@ably-fantasy-world-cup/shared@file:packages/shared':
+    resolution: {directory: packages/shared, type: directory}
 
   '@ably/msgpack-js@0.4.1':
     resolution: {integrity: sha512-Sjxj6SOr17hExAVrsycN7u6oV4PhZcK7Z2S8dM71CH/butgO47cSo/TL6FJPCXUyDAzKkOWjMUpJGyZkEpyu4Q==}
@@ -5724,6 +5713,8 @@ packages:
     resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
 
 snapshots:
+
+  '@ably-fantasy-world-cup/shared@file:packages/shared': {}
 
   '@ably/msgpack-js@0.4.1':
     dependencies:

@@ -1,6 +1,6 @@
 import { existsSync } from 'node:fs';
 
-const required = ['src/http/simulator.js', 'src/scoring/process-match-event.js', 'package.json'];
+const required = ['src/http/simulator.js', 'src/scoring/process-match-event.js'];
 const missing = required.filter((path) => !existsSync(new URL(`../${path}`, import.meta.url)));
 
 if (missing.length > 0) {

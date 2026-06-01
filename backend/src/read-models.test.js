@@ -8,7 +8,7 @@ import {
   getLeagueLeaderboard,
   getMatch
 } from "./http/read-models.js";
-import { runReset } from "../../../db/scripts/reset.js";
+import { runReset } from "../../db/scripts/reset.js";
 
 const databaseUrl = process.env.TEST_DATABASE_URL;
 

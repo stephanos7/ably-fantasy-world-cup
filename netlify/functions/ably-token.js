@@ -1,4 +1,4 @@
-import { createAblyTokenResponse } from "../../apps/api/src/http/ably-token.js";
+import { createAblyTokenResponse } from "../../backend/src/http/ably-token.js";
 import { handleJson, methodNotAllowed } from "../lib/functions-shared.js";
 
 export async function handler(event) {

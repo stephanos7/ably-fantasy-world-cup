@@ -1,4 +1,4 @@
-import { postSimulatorEvent } from "../../apps/api/src/http/simulator.js";
+import { postSimulatorEvent } from "../../backend/src/http/simulator.js";
 import {
   getDatabase,
   handleJson,

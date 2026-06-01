@@ -2,6 +2,10 @@
 
 This reference app keeps Postgres as the source of truth.
 
+The repo contains one Netlify app. The static frontend lives in `apps/web`, and
+Netlify Functions live only in `netlify/functions`. The `/api/...` URLs are
+redirect routes to Functions, not a standalone API runtime or deploy target.
+
 Runtime flow:
 
 1. Simulated match events are submitted to Netlify Functions through `/api/...` redirects.

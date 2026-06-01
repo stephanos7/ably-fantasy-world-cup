@@ -3,7 +3,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { runMigrations } from "./migrate.js";
 import { runSeed } from "./seed.js";
-import { createDatabasePool } from "../../apps/api/src/db/pool.js";
+import { createDatabasePool } from "../../backend/src/db/pool.js";
 import { describeDatabaseTarget, requireDatabaseUrl } from "./database-url.js";
 
 const __filename = fileURLToPath(import.meta.url);

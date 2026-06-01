@@ -1,9 +1,9 @@
 import { existsSync, readFileSync } from 'node:fs';
 
 const requiredPaths = [
-  'apps/web/package.json',
-  'apps/api/package.json',
-  'packages/shared/package.json',
+  'apps/web/index.html',
+  'backend/src/http/simulator.js',
+  'packages/shared/src/index.js',
   'db/migrations',
   'docs/architecture.md',
   '.env.example',

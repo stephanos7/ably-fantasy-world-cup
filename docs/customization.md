@@ -55,7 +55,7 @@ export const DEFAULT_SCORING_RULES = Object.freeze({
 
 Backend scoring code imports those rules from `@ably-fantasy-world-cup/shared/scoring-rules`.
 
-If you change scoring values, update the Node.js built-in tests in `apps/api/src/scoring/*.test.js` and run:
+If you change scoring values, update the Node.js built-in tests in `backend/src/scoring/*.test.js` and run:
 
 ```sh
 pnpm test
