@@ -1292,7 +1292,9 @@ function LeaderboardTable({ entries }) {
             <TableCell>Team</TableCell>
             <TableCell>Manager</TableCell>
             <TableCell align="right">Points</TableCell>
-            <TableCell>Updated</TableCell>
+            <TableCell sx={{ display: { xs: "none", sm: "table-cell" } }}>
+              Updated
+            </TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -1304,7 +1306,9 @@ function LeaderboardTable({ entries }) {
                 {entry.managerName || entry.managerSlug || "Unassigned"}
               </TableCell>
               <TableCell align="right">{entry.points}</TableCell>
-              <TableCell>{formatDateTime(entry.updatedAt)}</TableCell>
+              <TableCell sx={{ display: { xs: "none", sm: "table-cell" } }}>
+                {formatDateTime(entry.updatedAt)}
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>
