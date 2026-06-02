@@ -1278,14 +1278,6 @@ function DebugPage() {
 function MatchSummary({ match, events }) {
   return (
     <Stack spacing={2}>
-      <Stack direction="row" spacing={1} flexWrap="wrap">
-        <Chip
-          label={`${match.homeTeam} vs ${match.awayTeam}`}
-          color="primary"
-        />
-        <Chip label={match.status} variant="outlined" />
-        <Chip label={match.leagueName} variant="outlined" />
-      </Stack>
       <Typography component="h3" variant="h3">
         Match events
       </Typography>
