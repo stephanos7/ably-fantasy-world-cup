@@ -553,9 +553,9 @@ function ControlRoomPage() {
         title="France 🇫🇷 vs England 🏴󠁧󠁢󠁥󠁮󠁧󠁿"
         titleSx={{
           "@media (max-width:298.95px)": {
-            fontSize: "0.9rem",
-            lineHeight: 1,
-            fontWeight: 700,
+            fontSize: "1.1rem",
+            lineHeight: 1.1,
+            fontWeight: 800,
             letterSpacing: "-0.02em"
           }
         }}
@@ -578,9 +578,9 @@ function ControlRoomPage() {
                   variant="h3"
                   sx={{
                     "@media (max-width:298.95px)": {
-                      fontSize: "1rem",
-                      lineHeight: 1.15,
-                      fontWeight: 800,
+                      fontSize: "0.9rem",
+                      lineHeight: 1,
+                      fontWeight: 700,
                       letterSpacing: "-0.02em"
                     }
                   }}
