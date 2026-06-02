@@ -915,44 +915,48 @@ function ClientPage() {
     <Stack spacing={3}>
       <PageHeading
         title="Your team"
-        description="A user's personal team view. Updates arrive through Ably LiveSync connected to a central postgres db"
+        description="A user's personal team view. Updates through Ably LiveSync"
       />
-      <LiveSyncStatus
-        status={liveSync.status}
-        channels={liveSyncChannels}
-        debug={liveSync.debug}
-      />
+      <Box sx={{ "@media (max-width:298.95px)": { display: "none" } }}>
+        <Stack spacing={3}>
+          <LiveSyncStatus
+            status={liveSync.status}
+            channels={liveSyncChannels}
+            debug={liveSync.debug}
+          />
 
-      <Card variant="outlined">
-        <CardContent>
-          <Stack spacing={1.5}>
-            <Typography component="h2" variant="h3">
-              How this view syncs
-            </Typography>
-            <Typography color="text.secondary">
-              This page subscribes to the league teams and activity channels for
-              the current league. It applies only `team.updated` messages whose
-              payload `userSlug` matches this route, so the manager sees only
-              their own confirmed team updates.
-            </Typography>
-            <Box component="details">
-              <Box
-                component="summary"
-                sx={{ cursor: "pointer", fontWeight: 700 }}
-              >
-                Developer note
-              </Box>
-              <Typography color="text.secondary" sx={{ mt: 1 }}>
-                After the team data loads, the page subscribes to{" "}
-                <code>{teamSubscriptionLabel}</code> and{" "}
-                <code>{activitySubscriptionLabel}</code>. Activity items are
-                filtered so only entries for the current team are merged into
-                the UI.
-              </Typography>
-            </Box>
-          </Stack>
-        </CardContent>
-      </Card>
+          <Card variant="outlined">
+            <CardContent>
+              <Stack spacing={1.5}>
+                <Typography component="h2" variant="h3">
+                  How this view syncs
+                </Typography>
+                <Typography color="text.secondary">
+                  This page subscribes to the league teams and activity channels
+                  for the current league. It applies only `team.updated`
+                  messages whose payload `userSlug` matches this route, so the
+                  manager sees only their own confirmed team updates.
+                </Typography>
+                <Box component="details">
+                  <Box
+                    component="summary"
+                    sx={{ cursor: "pointer", fontWeight: 700 }}
+                  >
+                    Developer note
+                  </Box>
+                  <Typography color="text.secondary" sx={{ mt: 1 }}>
+                    After the team data loads, the page subscribes to{" "}
+                    <code>{teamSubscriptionLabel}</code> and{" "}
+                    <code>{activitySubscriptionLabel}</code>. Activity items are
+                    filtered so only entries for the current team are merged
+                    into the UI.
+                  </Typography>
+                </Box>
+              </Stack>
+            </CardContent>
+          </Card>
+        </Stack>
+      </Box>
 
       <AsyncBlock
         state={clientState}
@@ -967,9 +971,7 @@ function ClientPage() {
                     <Typography component="h2" variant="h3">
                       {data.team.name}
                     </Typography>
-                    <Typography color="text.secondary">
-                      {data.user.name}
-                    </Typography>
+
                     <Stack direction="row" spacing={1} flexWrap="wrap">
                       <StatChip label="Points" value={data.team.points} />
                       <StatChip
@@ -982,9 +984,6 @@ function ClientPage() {
                         Last event: {formatTeamLastEvent(data.team.lastEvent)}
                       </Typography>
                     ) : null}
-                    <Typography variant="body2" color="text.secondary">
-                      {data.league.name}
-                    </Typography>
                   </Stack>
                 </CardContent>
               </Card>
