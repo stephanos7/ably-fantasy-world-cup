@@ -529,7 +529,10 @@ function ControlRoomPage() {
                 <Typography component="h2" variant="h3">
                   Simulate a World Cup event
                 </Typography>
-                <Typography color="text.secondary">
+                <Typography
+                  color="text.secondary"
+                  sx={{ "@media (max-width:298.95px)": { display: "none" } }}
+                >
                   Simulate events to test the app.
                 </Typography>
                 <Stack
@@ -625,9 +628,7 @@ function ControlRoomPage() {
                       <AffectedTeams teams={latestResponse.affectedTeams} />
                       <CodeBlock value={latestResponse} />
                     </Stack>
-                  ) : (
-                    <EmptyState message="Trigger an event to see the simulator response." />
-                  )}
+                  ) : null}
                 </Stack>
               </CardContent>
             </Card>
@@ -1534,7 +1535,13 @@ function PageHeading({ eyebrow, title, description }) {
       <Typography component="h1" variant="h1">
         {title}
       </Typography>
-      <Typography color="text.secondary" sx={{ maxWidth: 760 }}>
+      <Typography
+        color="text.secondary"
+        sx={{
+          maxWidth: 760,
+          "@media (max-width:298.95px)": { display: "none" }
+        }}
+      >
         {description}
       </Typography>
     </Stack>
