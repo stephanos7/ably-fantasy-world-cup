@@ -92,8 +92,7 @@ const launcherCards = [
   {
     title: "Debug",
     route: "/debug",
-    description:
-      "Check Netlify Functions, Neon, and LiveSync configuration."
+    description: "Check Netlify Functions, Neon, and LiveSync configuration."
   }
 ];
 
@@ -315,8 +314,7 @@ function DemoLauncherPage() {
   return (
     <Stack spacing={4}>
       <PageHeading
-        eyebrow="Demo launcher"
-        title="Choose a reference app view"
+        title="Choose your view"
         description="Use this page to open the demo views in separate tabs, then trigger a match event from the Control Room and watch the database-confirmed updates arrive through LiveSync."
       />
 
@@ -499,7 +497,7 @@ function ControlRoomPage() {
       <PageHeading
         eyebrow="Control room"
         title="France vs England"
-        description="This page simulates an upstream sports data provider or internal event operator. Click one event to send an HTTP command to the backend function; the other views should change only after LiveSync publishes the resulting database state."
+        description="Simulate world cup events. Real, world cup events can be added by using the Sportsmonks API. Click on an event and watch the League Table, User views and Activity feed update in real time on another window/tab/device."
       />
 
       {submitError ? <Alert severity="error">{submitError}</Alert> : null}
@@ -703,28 +701,8 @@ function LeaguePage() {
   return (
     <Stack spacing={3}>
       <PageHeading
-        eyebrow="League"
-        title="League leaderboard"
-        description="This simulates the shared fantasy league table every participant can watch. Initial state is loaded from a Netlify Function, and leaderboard plus activity changes arrive through Ably LiveSync."
-      />
-      <Card variant="outlined">
-        <CardContent>
-          <Stack spacing={1.5}>
-            <Typography component="h2" variant="h3">
-              What to verify
-            </Typography>
-            <Typography color="text.secondary">
-              The leaderboard and activity feed are backend-computed. When the
-              Control Room sends an event, this page should update without a
-              refresh once LiveSync delivers the confirmed database changes.
-            </Typography>
-          </Stack>
-        </CardContent>
-      </Card>
-      <LiveSyncStatus
-        status={liveSync.status}
-        channels={liveSyncChannels}
-        debug={liveSync.debug}
+        title="Leaderboard"
+        description="Realtime fantasy league table every participant can watch. Updates arrive in real time through Ably LiveSync connected to a central postgres db."
       />
 
       <Grid container spacing={2}>
@@ -751,21 +729,29 @@ function LeaguePage() {
         </Grid>
 
         <Grid size={{ xs: 12, md: 4 }}>
-          <Card variant="outlined">
-            <CardContent>
-              <Stack spacing={2}>
-                <Typography component="h2" variant="h3">
-                  Recent activity
-                </Typography>
-                <AsyncBlock
-                  state={activityState}
-                  emptyMessage="No activity yet."
-                >
-                  {(data) => <ActivityFeed items={data.items} />}
-                </AsyncBlock>
-              </Stack>
-            </CardContent>
-          </Card>
+          <Stack spacing={2}>
+            <LiveSyncStatus
+              status={liveSync.status}
+              channels={liveSyncChannels}
+              debug={liveSync.debug}
+            />
+
+            <Card variant="outlined">
+              <CardContent>
+                <Stack spacing={2}>
+                  <Typography component="h2" variant="h3">
+                    Recent activity
+                  </Typography>
+                  <AsyncBlock
+                    state={activityState}
+                    emptyMessage="No activity yet."
+                  >
+                    {(data) => <ActivityFeed items={data.items} />}
+                  </AsyncBlock>
+                </Stack>
+              </CardContent>
+            </Card>
+          </Stack>
         </Grid>
       </Grid>
     </Stack>
@@ -878,9 +864,8 @@ function ClientPage() {
   return (
     <Stack spacing={3}>
       <PageHeading
-        eyebrow="Fantasy client"
-        title="Team state"
-        description="This simulates one fantasy manager's personal team view. Initial state loads over HTTP, then score, rank, squad, and activity updates arrive through Ably LiveSync."
+        title="Your team"
+        description="A user's personal team view. Updates arrive through Ably LiveSync connected to a central postgres db"
       />
       <LiveSyncStatus
         status={liveSync.status}
@@ -901,14 +886,17 @@ function ClientPage() {
               their own confirmed team updates.
             </Typography>
             <Box component="details">
-              <Box component="summary" sx={{ cursor: "pointer", fontWeight: 700 }}>
+              <Box
+                component="summary"
+                sx={{ cursor: "pointer", fontWeight: 700 }}
+              >
                 Developer note
               </Box>
               <Typography color="text.secondary" sx={{ mt: 1 }}>
-                After the team data loads, the page subscribes to
-                `league:{leagueSlug}:teams` and `league:{leagueSlug}:activity`.
-                Activity items are filtered so only entries for the current
-                team are merged into the UI.
+                After the team data loads, the page subscribes to `league:
+                {leagueSlug}:teams` and `league:{leagueSlug}:activity`. Activity
+                items are filtered so only entries for the current team are
+                merged into the UI.
               </Typography>
             </Box>
           </Stack>
@@ -1029,25 +1017,9 @@ function TvPage() {
   return (
     <Stack spacing={3} sx={{ py: { md: 4 } }}>
       <PageHeading
-        eyebrow="TV"
         title="Public scoreboard"
-        description="This simulates a public display, office TV, livestream overlay, or event scoreboard. It is read-only and updates from backend-confirmed leaderboard.updated messages."
+        description="The live score board!"
       />
-
-      <Card variant="outlined">
-        <CardContent>
-          <Stack spacing={1.5}>
-            <Typography component="h2" variant="h3">
-              What this view does
-            </Typography>
-            <Typography color="text.secondary">
-              The TV view is a display-only leaderboard for the shared league.
-              It loads the current standings first, then waits for confirmed
-              leaderboard updates through LiveSync.
-            </Typography>
-          </Stack>
-        </CardContent>
-      </Card>
 
       <AsyncBlock
         state={leaderboardState}
@@ -1136,7 +1108,6 @@ function DebugPage() {
   return (
     <Stack spacing={3}>
       <PageHeading
-        eyebrow="Debug"
         title="Runtime diagnostics"
         description="Use this page to verify the Netlify Function, Neon database, and Ably LiveSync setup."
       />
@@ -1201,7 +1172,10 @@ function DebugPage() {
                   <ListItem disableGutters>
                     <ListItemText
                       primary="LiveSync connected"
-                      secondary={liveSyncDebug?.status ?? "No connection state observed yet."}
+                      secondary={
+                        liveSyncDebug?.status ??
+                        "No connection state observed yet."
+                      }
                     />
                   </ListItem>
                   <ListItem disableGutters>
