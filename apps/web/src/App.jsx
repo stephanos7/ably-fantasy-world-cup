@@ -550,7 +550,7 @@ function ControlRoomPage() {
     <Stack spacing={3}>
       <PageHeading
         eyebrow="Control room"
-        title="France vs England"
+        title="France 🇫🇷 VS England 🏴󠁧󠁢󠁥󠁮󠁧󠁿"
         titleSx={{
           "@media (max-width:298.95px)": {
             fontSize: "1.1rem",
@@ -565,12 +565,12 @@ function ControlRoomPage() {
       {submitError ? <Alert severity="error">{submitError}</Alert> : null}
 
       <Grid container spacing={2}>
-        <Grid size={{ xs: 12, md: 7 }}>
-          <Card
-            variant="outlined"
-            id="simulate-world-cup-event"
-            sx={{ scrollMarginTop: 96 }}
-          >
+        <Grid
+          size={{ xs: 12, md: 7 }}
+          id="simulate-world-cup-event"
+          sx={{ scrollMarginTop: 96 }}
+        >
+          <Card variant="outlined">
             <CardContent>
               <Stack spacing={2}>
                 <Typography
@@ -585,7 +585,7 @@ function ControlRoomPage() {
                     }
                   }}
                 >
-                  Simulate a World Cup event
+                  Simulate an event
                 </Typography>
                 <Typography
                   color="text.secondary"
@@ -1367,7 +1367,9 @@ function LeaderboardTableRow({ entry }) {
     <TableRow sx={getUpdatedResultRowSx(isRowUpdated)}>
       <TableCell>{entry.rank}</TableCell>
       <TableCell>{entry.teamName}</TableCell>
-      <TableCell>{entry.managerName || entry.managerSlug || "Unassigned"}</TableCell>
+      <TableCell>
+        {entry.managerName || entry.managerSlug || "Unassigned"}
+      </TableCell>
       <TableCell align="right">
         <Box component="span" sx={getUpdatedResultValueSx(arePointsUpdated)}>
           {entry.points}
