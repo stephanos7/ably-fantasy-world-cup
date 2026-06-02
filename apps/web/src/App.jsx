@@ -512,6 +512,14 @@ function ControlRoomPage() {
       <PageHeading
         eyebrow="Control room"
         title="France vs England"
+        titleSx={{
+          "@media (max-width:298.95px)": {
+            fontSize: "1.1rem",
+            lineHeight: 1.1,
+            fontWeight: 800,
+            letterSpacing: "-0.02em"
+          }
+        }}
         description="Simulate world cup events. Real, world cup events can be added by using the Sportsmonks API. Click on an event and watch the League Table, User views and Activity feed update in real time on another window/tab/device."
       />
 
@@ -526,7 +534,18 @@ function ControlRoomPage() {
           >
             <CardContent>
               <Stack spacing={2}>
-                <Typography component="h2" variant="h3">
+                <Typography
+                  component="h2"
+                  variant="h3"
+                  sx={{
+                    "@media (max-width:298.95px)": {
+                      fontSize: "1rem",
+                      lineHeight: 1.15,
+                      fontWeight: 800,
+                      letterSpacing: "-0.02em"
+                    }
+                  }}
+                >
                   Simulate a World Cup event
                 </Typography>
                 <Typography
@@ -612,6 +631,25 @@ function ControlRoomPage() {
 
         <Grid size={{ xs: 12, md: 5 }}>
           <Stack spacing={2}>
+            <Card
+              variant="outlined"
+              id="activity-feed"
+              sx={{ scrollMarginTop: 96 }}
+            >
+              <CardContent>
+                <Stack spacing={2}>
+                  <Typography component="h2" variant="h3">
+                    Recent activity
+                  </Typography>
+                  <AsyncBlock
+                    state={activityState}
+                    emptyMessage="No activity yet."
+                  >
+                    {(data) => <ActivityFeed items={data.items} />}
+                  </AsyncBlock>
+                </Stack>
+              </CardContent>
+            </Card>
             <Card variant="outlined">
               <CardContent>
                 <Stack spacing={2}>
@@ -629,26 +667,6 @@ function ControlRoomPage() {
                       <CodeBlock value={latestResponse} />
                     </Stack>
                   ) : null}
-                </Stack>
-              </CardContent>
-            </Card>
-
-            <Card
-              variant="outlined"
-              id="activity-feed"
-              sx={{ scrollMarginTop: 96 }}
-            >
-              <CardContent>
-                <Stack spacing={2}>
-                  <Typography component="h2" variant="h3">
-                    Recent activity
-                  </Typography>
-                  <AsyncBlock
-                    state={activityState}
-                    emptyMessage="No activity yet."
-                  >
-                    {(data) => <ActivityFeed items={data.items} />}
-                  </AsyncBlock>
                 </Stack>
               </CardContent>
             </Card>
@@ -1526,13 +1544,13 @@ function CodeBlock({ value }) {
   );
 }
 
-function PageHeading({ eyebrow, title, description }) {
+function PageHeading({ eyebrow, title, description, titleSx }) {
   return (
     <Stack spacing={1}>
       <Typography variant="overline" color="primary" sx={{ fontWeight: 800 }}>
         {eyebrow}
       </Typography>
-      <Typography component="h1" variant="h1">
+      <Typography component="h1" variant="h1" sx={titleSx}>
         {title}
       </Typography>
       <Typography
