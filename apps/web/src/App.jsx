@@ -1539,7 +1539,14 @@ function CodeBlock({ value }) {
 function PageHeading({ eyebrow, title, description, titleSx }) {
   return (
     <Stack spacing={1}>
-      <Typography variant="overline" color="primary" sx={{ fontWeight: 800 }}>
+      <Typography
+        variant="overline"
+        color="primary"
+        sx={{
+          fontWeight: 800,
+          "@media (max-width:298.95px)": { display: "none" }
+        }}
+      >
         {eyebrow}
       </Typography>
       <Typography component="h1" variant="h1" sx={titleSx}>
