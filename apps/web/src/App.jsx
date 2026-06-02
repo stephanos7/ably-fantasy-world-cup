@@ -353,21 +353,6 @@ function DemoLauncherPage() {
         </CardContent>
       </Card>
 
-      <Card variant="outlined">
-        <CardContent>
-          <Stack spacing={1.5}>
-            <Typography component="h2" variant="h3">
-              Real-world analogy
-            </Typography>
-            <Typography color="text.secondary">
-              This is similar to a fantasy sports product where a sports data
-              provider emits match events and every connected client sees
-              confirmed score and rank changes.
-            </Typography>
-          </Stack>
-        </CardContent>
-      </Card>
-
       <Grid container spacing={2}>
         {launcherCards.map((card) => (
           <Grid
@@ -392,7 +377,7 @@ function LiveSyncFlowExplanation() {
       <CardContent>
         <Stack spacing={2}>
           <Typography component="h2" variant="h3">
-            LiveSync flow
+            How Ably LiveSync works
           </Typography>
           <Grid container spacing={2}>
             <Grid size={{ xs: 12, md: 3 }}>
@@ -457,7 +442,13 @@ function CardAction({ title, route, description }) {
           </Typography>
           <Typography color="text.secondary">{description}</Typography>
           <Box>
-            <Button component={RouterLink} to={route} variant="contained">
+            <Button
+              component={RouterLink}
+              to={route}
+              target="_blank"
+              rel="noopener noreferrer"
+              variant="contained"
+            >
               Open view
             </Button>
           </Box>
@@ -476,6 +467,27 @@ function ControlRoomPage() {
     () => getLeagueActivity(demoLeagueSlug),
     []
   );
+
+  useEffect(() => {
+    function scrollToAnchor() {
+      const targetId = window.location.hash.slice(1);
+
+      if (!targetId) {
+        return;
+      }
+
+      document.getElementById(targetId)?.scrollIntoView({
+        block: "start"
+      });
+    }
+
+    scrollToAnchor();
+    window.addEventListener("hashchange", scrollToAnchor);
+
+    return () => {
+      window.removeEventListener("hashchange", scrollToAnchor);
+    };
+  }, []);
 
   async function handleSimulatorAction(action) {
     setPendingAction(action.label);
@@ -504,17 +516,18 @@ function ControlRoomPage() {
 
       <Grid container spacing={2}>
         <Grid size={{ xs: 12, md: 7 }}>
-          <Card variant="outlined">
+          <Card
+            variant="outlined"
+            id="simulate-world-cup-event"
+            sx={{ scrollMarginTop: 96 }}
+          >
             <CardContent>
               <Stack spacing={2}>
                 <Typography component="h2" variant="h3">
-                  Send simulator event
+                  Simulate a World Cup event
                 </Typography>
                 <Typography color="text.secondary">
-                  These buttons are inputs, not final state. The backend
-                  function validates the event, recalculates scores and ranks,
-                  writes Postgres tables, and inserts LiveSync outbox rows in
-                  the same transaction.
+                  Simulate events to test the app.
                 </Typography>
                 <Stack
                   direction={{ xs: "column", sm: "row" }}
@@ -541,8 +554,7 @@ function ControlRoomPage() {
                   </Typography>
                   <Typography color="text.secondary">
                     Open the live views below in separate tabs before clicking
-                    an event. Their scores and ranks come from LiveSync
-                    messages, not frontend calculations.
+                    an event.
                   </Typography>
                   <Stack
                     direction={{ xs: "column", sm: "row" }}
@@ -552,6 +564,8 @@ function ControlRoomPage() {
                     <Button
                       component={RouterLink}
                       to={`/client/${demoUserSlug}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       variant="outlined"
                     >
                       Open client tab
@@ -559,6 +573,8 @@ function ControlRoomPage() {
                     <Button
                       component={RouterLink}
                       to={`/league/${demoLeagueSlug}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       variant="outlined"
                     >
                       Open league tab
@@ -566,6 +582,8 @@ function ControlRoomPage() {
                     <Button
                       component={RouterLink}
                       to={`/tv/${demoLeagueSlug}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       variant="outlined"
                     >
                       Open TV tab
@@ -611,7 +629,11 @@ function ControlRoomPage() {
               </CardContent>
             </Card>
 
-            <Card variant="outlined">
+            <Card
+              variant="outlined"
+              id="activity-feed"
+              sx={{ scrollMarginTop: 96 }}
+            >
               <CardContent>
                 <Stack spacing={2}>
                   <Typography component="h2" variant="h3">
@@ -763,6 +785,12 @@ function ClientPage() {
   const clientState = useAsyncData(() => getClientTeam(userSlug), [userSlug]);
   const { updateData: updateClientData } = clientState;
   const clientLeagueSlug = clientState.data?.league?.slug;
+  const teamSubscriptionLabel = clientLeagueSlug
+    ? `league:${clientLeagueSlug}:teams`
+    : "league:{leagueSlug}:teams";
+  const activitySubscriptionLabel = clientLeagueSlug
+    ? `league:${clientLeagueSlug}:activity`
+    : "league:{leagueSlug}:activity";
   const liveSyncChannels = useMemo(
     () => [
       ...(clientLeagueSlug
@@ -893,10 +921,11 @@ function ClientPage() {
                 Developer note
               </Box>
               <Typography color="text.secondary" sx={{ mt: 1 }}>
-                After the team data loads, the page subscribes to `league:
-                {leagueSlug}:teams` and `league:{leagueSlug}:activity`. Activity
-                items are filtered so only entries for the current team are
-                merged into the UI.
+                After the team data loads, the page subscribes to{" "}
+                <code>{teamSubscriptionLabel}</code> and{" "}
+                <code>{activitySubscriptionLabel}</code>. Activity items are
+                filtered so only entries for the current team are merged into
+                the UI.
               </Typography>
             </Box>
           </Stack>
@@ -1016,10 +1045,7 @@ function TvPage() {
 
   return (
     <Stack spacing={3} sx={{ py: { md: 4 } }}>
-      <PageHeading
-        title="Public scoreboard"
-        description="The live score board!"
-      />
+      <PageHeading title="Public scoreboard" />
 
       <AsyncBlock
         state={leaderboardState}
@@ -1035,13 +1061,6 @@ function TvPage() {
             />
             <Stack spacing={0.5}>
               <Typography
-                variant="overline"
-                color="primary"
-                sx={{ fontWeight: 800 }}
-              >
-                TV leaderboard
-              </Typography>
-              <Typography
                 component="h1"
                 sx={{
                   fontSize: { xs: "2.75rem", md: "4rem" },
@@ -1051,7 +1070,11 @@ function TvPage() {
                 {data.league.name}
               </Typography>
             </Stack>
-            <Paper variant="outlined" sx={{ overflow: "hidden" }}>
+            <Paper
+              variant="outlined"
+              id="tv-leaderboard"
+              sx={{ overflow: "hidden", scrollMarginTop: 96 }}
+            >
               <Table size="medium">
                 <TableHead>
                   <TableRow>
