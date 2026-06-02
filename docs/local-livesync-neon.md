@@ -42,7 +42,7 @@ pnpm db:seed
 pnpm db:inspect
 ```
 
-6. Create an Ably app and copy a server-side API key into `.env`.
+6. Create an Ably app and copy a server-side Ably key into `.env`.
 
 ```env
 ABLY_API_KEY=your-ably-api-key

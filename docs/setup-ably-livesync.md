@@ -31,7 +31,7 @@ Required connector objects:
 - `public.outbox_notify()`
 - `public_outbox_trigger`
 
-6. Create an Ably app and set a server-side API key as `ABLY_API_KEY`.
+6. Create an Ably app and set a server-side Ably key as `ABLY_API_KEY`.
 7. Configure the Ably-hosted Postgres connector against the same Neon database.
 8. Run `pnpm dev` locally or deploy the Netlify site.
 9. Trigger a simulator event and confirm browser clients receive updates through Ably.

@@ -21,7 +21,7 @@ async function getTokenRequest() {
   if (!response.ok) {
     const details = body?.error ? ` ${body.error}` : '';
     logLiveSync('Ably token request failed', { status: response.status, error: body?.error });
-    throw new Error(`Unable to get Ably token from API.${details}`);
+    throw new Error(`Unable to get Ably token from the Netlify Function.${details}`);
   }
 
   logLiveSync('Ably token request succeeded', { keyName: body?.keyName, ttl: body?.ttl });

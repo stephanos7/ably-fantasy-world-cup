@@ -69,29 +69,31 @@ const launcherCards = [
     title: "Control Room",
     route: "/control-room",
     description:
-      "Start here. Trigger simulated match events and inspect the backend transaction response."
+      "Start here. Trigger simulated match events and inspect the backend function response."
   },
   {
     title: "Client View",
     route: `/client/${demoUserSlug}`,
     description:
-      "Keep this open beside the Control Room to watch one manager receive LiveSync updates."
+      "Keep this open beside the Control Room to watch one manager's team update through LiveSync."
   },
   {
     title: "League Table",
     route: `/league/${demoLeagueSlug}`,
     description:
-      "Watch the backend-ranked Friends League leaderboard update from database-confirmed state."
+      "Watch the shared Friends League leaderboard update from database-confirmed state."
   },
   {
     title: "TV Mode",
     route: `/tv/${demoLeagueSlug}`,
-    description: "Open a presentation-friendly leaderboard display."
+    description:
+      "Open a read-only public scoreboard for the shared league table."
   },
   {
     title: "Debug",
     route: "/debug",
-    description: "Check API connectivity and available demo routes."
+    description:
+      "Check Netlify Functions, Neon, and LiveSync configuration."
   }
 ];
 
@@ -315,7 +317,7 @@ function DemoLauncherPage() {
       <PageHeading
         eyebrow="Demo launcher"
         title="Choose a reference app view"
-        description="Open the Control Room first, then open a client, league, or TV view in another tab. Simulator clicks go to the API; visible score and rank changes arrive from database-confirmed LiveSync messages."
+        description="Use this page to open the demo views in separate tabs, then trigger a match event from the Control Room and watch the database-confirmed updates arrive through LiveSync."
       />
 
       <LiveSyncFlowExplanation />
@@ -324,31 +326,46 @@ function DemoLauncherPage() {
         <CardContent>
           <Stack spacing={2}>
             <Typography component="h2" variant="h3">
-              First run checklist
+              How to demo this
             </Typography>
             <Grid container spacing={2}>
               <Grid size={{ xs: 12, md: 4 }}>
                 <InstructionStep
                   step="1"
                   title="Open the Control Room"
-                  description="Use it as the simulated sports feed for France vs England."
+                  description="This is the simulated upstream sports feed or internal event operator."
                 />
               </Grid>
               <Grid size={{ xs: 12, md: 4 }}>
                 <InstructionStep
                   step="2"
                   title="Open live views"
-                  description="Keep Client, League, or TV tabs open so LiveSync updates are visible."
+                  description="Open League, Client, and TV in other tabs so you can see the synced views update."
                 />
               </Grid>
               <Grid size={{ xs: 12, md: 4 }}>
                 <InstructionStep
                   step="3"
-                  title="Click one event"
-                  description="The API writes Postgres state and outbox rows in one transaction."
+                  title="Trigger Mbappé goal"
+                  description="Watch the backend write Postgres state and LiveSync outbox rows in one transaction, then see the confirmed updates arrive."
                 />
               </Grid>
             </Grid>
+          </Stack>
+        </CardContent>
+      </Card>
+
+      <Card variant="outlined">
+        <CardContent>
+          <Stack spacing={1.5}>
+            <Typography component="h2" variant="h3">
+              Real-world analogy
+            </Typography>
+            <Typography color="text.secondary">
+              This is similar to a fantasy sports product where a sports data
+              provider emits match events and every connected client sees
+              confirmed score and rank changes.
+            </Typography>
           </Stack>
         </CardContent>
       </Card>
@@ -384,21 +401,21 @@ function LiveSyncFlowExplanation() {
               <InstructionStep
                 step="1"
                 title="Simulator input"
-                description="The Control Room posts a seeded match event to a Netlify Function."
+                description="The Control Room sends a seeded match event to a Netlify Function."
               />
             </Grid>
             <Grid size={{ xs: 12, md: 3 }}>
               <InstructionStep
                 step="2"
                 title="Backend truth"
-                description="The API scores affected teams and ranks the leaderboard."
+                description="The backend function scores affected teams and ranks the leaderboard."
               />
             </Grid>
             <Grid size={{ xs: 12, md: 3 }}>
               <InstructionStep
                 step="3"
                 title="Postgres commit"
-                description="App tables and LiveSync outbox rows are written together."
+                description="App tables and LiveSync outbox rows are written together inside one transaction."
               />
             </Grid>
             <Grid size={{ xs: 12, md: 3 }}>
@@ -482,7 +499,7 @@ function ControlRoomPage() {
       <PageHeading
         eyebrow="Control room"
         title="France vs England"
-        description="This page is the demo's simulated upstream match feed. Click one event to send an HTTP command to the backend; the other views should change only after LiveSync publishes the resulting database state."
+        description="This page simulates an upstream sports data provider or internal event operator. Click one event to send an HTTP command to the backend function; the other views should change only after LiveSync publishes the resulting database state."
       />
 
       {submitError ? <Alert severity="error">{submitError}</Alert> : null}
@@ -496,10 +513,10 @@ function ControlRoomPage() {
                   Send simulator event
                 </Typography>
                 <Typography color="text.secondary">
-                  These buttons are inputs, not final state. The API validates
-                  the event, recalculates scores and ranks, writes Postgres
-                  tables, and inserts LiveSync outbox rows in the same
-                  transaction.
+                  These buttons are inputs, not final state. The backend
+                  function validates the event, recalculates scores and ranks,
+                  writes Postgres tables, and inserts LiveSync outbox rows in
+                  the same transaction.
                 </Typography>
                 <Stack
                   direction={{ xs: "column", sm: "row" }}
@@ -577,12 +594,12 @@ function ControlRoomPage() {
               <CardContent>
                 <Stack spacing={2}>
                   <Typography component="h2" variant="h3">
-                    Latest API response
+                    Function response
                   </Typography>
                   <Typography color="text.secondary">
-                    This is the immediate HTTP response from the simulator
-                    command. LiveSync delivery is visible in the Client, League,
-                    TV, and Debug views.
+                    This is the immediate HTTP response from the Netlify
+                    Function. LiveSync delivery is visible in the Client,
+                    League, TV, and Debug views.
                   </Typography>
                   {latestResponse ? (
                     <Stack spacing={2}>
@@ -688,8 +705,22 @@ function LeaguePage() {
       <PageHeading
         eyebrow="League"
         title="League leaderboard"
-        description="Initial standings load over HTTP; subsequent updates arrive through Ably LiveSync."
+        description="This simulates the shared fantasy league table every participant can watch. Initial state is loaded from a Netlify Function, and leaderboard plus activity changes arrive through Ably LiveSync."
       />
+      <Card variant="outlined">
+        <CardContent>
+          <Stack spacing={1.5}>
+            <Typography component="h2" variant="h3">
+              What to verify
+            </Typography>
+            <Typography color="text.secondary">
+              The leaderboard and activity feed are backend-computed. When the
+              Control Room sends an event, this page should update without a
+              refresh once LiveSync delivers the confirmed database changes.
+            </Typography>
+          </Stack>
+        </CardContent>
+      </Card>
       <LiveSyncStatus
         status={liveSync.status}
         channels={liveSyncChannels}
@@ -849,13 +880,40 @@ function ClientPage() {
       <PageHeading
         eyebrow="Fantasy client"
         title="Team state"
-        description="Initial team state loads over HTTP; subsequent score, rank, squad, and activity updates arrive through Ably LiveSync."
+        description="This simulates one fantasy manager's personal team view. Initial state loads over HTTP, then score, rank, squad, and activity updates arrive through Ably LiveSync."
       />
       <LiveSyncStatus
         status={liveSync.status}
         channels={liveSyncChannels}
         debug={liveSync.debug}
       />
+
+      <Card variant="outlined">
+        <CardContent>
+          <Stack spacing={1.5}>
+            <Typography component="h2" variant="h3">
+              How this view syncs
+            </Typography>
+            <Typography color="text.secondary">
+              This page subscribes to the league teams and activity channels for
+              the current league. It applies only `team.updated` messages whose
+              payload `userSlug` matches this route, so the manager sees only
+              their own confirmed team updates.
+            </Typography>
+            <Box component="details">
+              <Box component="summary" sx={{ cursor: "pointer", fontWeight: 700 }}>
+                Developer note
+              </Box>
+              <Typography color="text.secondary" sx={{ mt: 1 }}>
+                After the team data loads, the page subscribes to
+                `league:{leagueSlug}:teams` and `league:{leagueSlug}:activity`.
+                Activity items are filtered so only entries for the current
+                team are merged into the UI.
+              </Typography>
+            </Box>
+          </Stack>
+        </CardContent>
+      </Card>
 
       <AsyncBlock
         state={clientState}
@@ -969,7 +1027,28 @@ function TvPage() {
   });
 
   return (
-    <Box sx={{ py: { md: 4 } }}>
+    <Stack spacing={3} sx={{ py: { md: 4 } }}>
+      <PageHeading
+        eyebrow="TV"
+        title="Public scoreboard"
+        description="This simulates a public display, office TV, livestream overlay, or event scoreboard. It is read-only and updates from backend-confirmed leaderboard.updated messages."
+      />
+
+      <Card variant="outlined">
+        <CardContent>
+          <Stack spacing={1.5}>
+            <Typography component="h2" variant="h3">
+              What this view does
+            </Typography>
+            <Typography color="text.secondary">
+              The TV view is a display-only leaderboard for the shared league.
+              It loads the current standings first, then waits for confirmed
+              leaderboard updates through LiveSync.
+            </Typography>
+          </Stack>
+        </CardContent>
+      </Card>
+
       <AsyncBlock
         state={leaderboardState}
         emptyMessage="No leaderboard entries yet."
@@ -1045,7 +1124,7 @@ function TvPage() {
           </Stack>
         )}
       </AsyncBlock>
-    </Box>
+    </Stack>
   );
 }
 
@@ -1059,7 +1138,7 @@ function DebugPage() {
       <PageHeading
         eyebrow="Debug"
         title="Runtime diagnostics"
-        description="Inspect API, Neon, and Ably LiveSync configuration for the demo."
+        description="Use this page to verify the Netlify Function, Neon database, and Ably LiveSync setup."
       />
 
       <Grid container spacing={2}>
@@ -1068,10 +1147,10 @@ function DebugPage() {
             <CardContent>
               <Stack spacing={2}>
                 <Typography component="h2" variant="h3">
-                  API
+                  Netlify Functions
                 </Typography>
                 <KeyValue
-                  label="Base URL"
+                  label="Function base URL"
                   value={apiBaseUrl || "same origin"}
                 />
                 <AsyncBlock
@@ -1080,12 +1159,20 @@ function DebugPage() {
                 >
                   {(data) => <CodeBlock value={data} />}
                 </AsyncBlock>
+                <Typography color="text.secondary" variant="body2">
+                  Confirm `GET /api/config` works and reports both database and
+                  Ably as configured.
+                </Typography>
                 <AsyncBlock
                   state={configState}
                   emptyMessage="Config unavailable."
                 >
                   {(data) => <CodeBlock value={data} />}
                 </AsyncBlock>
+                <Typography color="text.secondary" variant="body2">
+                  Confirm `GET /api/ably/token` works by opening a live view and
+                  checking that the browser receives an Ably token request.
+                </Typography>
               </Stack>
             </CardContent>
           </Card>
@@ -1096,16 +1183,47 @@ function DebugPage() {
             <CardContent>
               <Stack spacing={2}>
                 <Typography component="h2" variant="h3">
-                  Demo routes
+                  What to check
                 </Typography>
                 <List dense disablePadding>
-                  {navItems.map((item) => (
-                    <ListItem key={item.to} disableGutters>
-                      <Button component={RouterLink} to={item.to}>
-                        {item.to}
-                      </Button>
-                    </ListItem>
-                  ))}
+                  <ListItem disableGutters>
+                    <ListItemText
+                      primary="/api/config works"
+                      secondary="The response should show databaseConfigured=true and ablyConfigured=true."
+                    />
+                  </ListItem>
+                  <ListItem disableGutters>
+                    <ListItemText
+                      primary="/api/ably/token works"
+                      secondary="Open a live view and confirm the browser can request an Ably token."
+                    />
+                  </ListItem>
+                  <ListItem disableGutters>
+                    <ListItemText
+                      primary="LiveSync connected"
+                      secondary={liveSyncDebug?.status ?? "No connection state observed yet."}
+                    />
+                  </ListItem>
+                  <ListItem disableGutters>
+                    <ListItemText
+                      primary="Last received channel and message"
+                      secondary={
+                        liveSyncDebug?.lastMessage
+                          ? `${liveSyncDebug.lastMessage.channel} / ${liveSyncDebug.lastMessage.name}`
+                          : "No LiveSync message has been received in this tab yet."
+                      }
+                    />
+                  </ListItem>
+                  <ListItem disableGutters>
+                    <ListItemText
+                      primary="Expected subscribed channels"
+                      secondary={
+                        liveSyncDebug?.subscribedChannels?.length
+                          ? `Expected demo channels include league:friends:leaderboard, league:friends:activity, league:friends:teams, and match:france-england. Current tab subscriptions: ${liveSyncDebug.subscribedChannels.join(", ")}`
+                          : "Expected demo channels include league:friends:leaderboard, league:friends:activity, league:friends:teams, and match:france-england."
+                      }
+                    />
+                  </ListItem>
                 </List>
               </Stack>
             </CardContent>
@@ -1118,6 +1236,11 @@ function DebugPage() {
               <Stack spacing={2}>
                 <Typography component="h2" variant="h3">
                   LiveSync debug
+                </Typography>
+                <Typography color="text.secondary">
+                  Check the last received message, the subscribed channels, and
+                  the current connection state after opening one of the live
+                  views.
                 </Typography>
                 {liveSyncDebug ? (
                   <CodeBlock value={liveSyncDebug} />
@@ -1288,7 +1411,7 @@ function LiveSyncStatus({ status, channels, debug, compact = false }) {
   const color = liveSyncStatusColor(status);
   const description =
     status === "auth_failed"
-      ? "LiveSync is not configured. Add ABLY_API_KEY and configure the Ably Postgres connector."
+      ? "LiveSync is not configured. Add ABLY_API_KEY and configure the Ably-hosted Postgres connector against the same database."
       : `${label} for ${channels.length} channel${channels.length === 1 ? "" : "s"}.`;
   const lastMessage = debug?.lastMessage;
 

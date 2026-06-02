@@ -83,7 +83,7 @@ Common remaps:
 | League leaderboard | Ranking, standings, scoreboard |
 | Activity feed | Timeline, audit feed, event log |
 
-Start with copy and seed data. Rename database tables only when the existing schema cannot represent the new domain. If you rename schema objects, add migrations in `db/migrations` and update API queries and tests in the same PR.
+Start with copy and seed data. Rename database tables only when the existing schema cannot represent the new domain. If you rename schema objects, add migrations in `db/migrations` and update backend queries and tests in the same PR.
 
 LiveSync channel and event names are part of the demo contract. If you remap them, update backend outbox writes, frontend subscriptions, docs, and tests together.
 

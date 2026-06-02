@@ -2,6 +2,8 @@
 
 A public, forkable Ably reference app for a fantasy football experience powered by Netlify, Neon Postgres, and Ably LiveSync.
 
+For a page-by-page guide, see [Demo walkthrough](docs/demo-walkthrough.md).
+
 ## What This App Demonstrates
 
 - Simulated match events enter the backend as inputs.
@@ -47,6 +49,17 @@ set +a
 pnpm dev
 ```
 
+## What Each Page Does
+
+| Route | Real-world equivalent | Initial data | LiveSync channels | Expected update |
+| --- | --- | --- | --- | --- |
+| `/` | Demo launcher | none | none | Guides the demo flow |
+| `/control-room` | Upstream match feed or event operator | match summary, activity summary | optional debug-only reads | Sends simulator events |
+| `/league/friends` | Shared league table | leaderboard, activity | `league:friends:leaderboard`, `league:friends:activity` | Standings and activity update |
+| `/client/stephanos` | Individual manager view | team, squad, activity | `league:friends:teams`, `league:friends:activity` | Points, rank, squad, and activity update for matching `userSlug` |
+| `/tv/friends` | Public display or TV scoreboard | leaderboard | `league:friends:leaderboard` | Read-only leaderboard update |
+| `/debug` | Developer diagnostics | config, health | debug subscriptions only | Shows setup status and last message |
+
 ## Required Runtime Path
 
 ```text
@@ -82,6 +95,34 @@ pnpm test:e2e
 
 `pnpm db:reset` refuses `NODE_ENV=production` and requires `ALLOW_DB_RESET=true`. It prints only the target host and database name, never credentials.
 
+## Fork This Repo
+
+1. Clone or fork the repository.
+2. Create a Neon database and set `DATABASE_URL`.
+3. Run `pnpm db:migrate` and `pnpm db:seed`.
+4. Configure the Ably-hosted LiveSync connector against the same database.
+5. Update the app name, theme, and seed data for your fork.
+6. Run the production smoke test below before sharing the fork.
+
+## Common Customizations
+
+See [Customization guide](docs/customization.md) for the supported extension points.
+
+- Branding and theme updates
+- Seeded demo users, teams, players, and match data
+- Scoring rule changes
+- Domain remapping while keeping the Postgres + LiveSync ownership model
+
+## Production Smoke Test
+
+1. Open `/control-room` and `/league/friends`.
+2. Trigger `Mbappé goal`.
+3. Confirm `/league/friends` updates without a refresh.
+4. Open `/client/stephanos`.
+5. Trigger an event that affects Stephanos.
+6. Confirm points update without a refresh.
+7. Open the Ably dashboard and confirm `league:friends:teams` receives `team.updated`.
+
 ## Workspace Layout
 
 ```text
@@ -100,6 +141,7 @@ docs/
 
 ## Documentation
 
+- [Demo walkthrough](docs/demo-walkthrough.md)
 - [Local development](docs/local-development.md)
 - [Neon + Ably LiveSync setup](docs/local-livesync-neon.md)
 - [Ably LiveSync connector setup](docs/setup-ably-livesync.md)
@@ -108,3 +150,7 @@ docs/
 - [Architecture](docs/architecture.md)
 - [Customization guide](docs/customization.md)
 - [Deployment](docs/deployment.md)
+
+## License
+
+See [LICENSE](LICENSE) for the MIT license text.

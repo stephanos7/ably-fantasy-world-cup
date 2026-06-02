@@ -21,7 +21,7 @@ async function requestJson(path, options = {}) {
       typeof body === "object" && body?.error
         ? body.error
         : response.statusText;
-    throw new Error(`API request failed (${response.status}): ${message}`);
+    throw new Error(`Function request failed (${response.status}): ${message}`);
   }
 
   return body;
