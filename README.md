@@ -49,6 +49,196 @@ set +a
 pnpm dev
 ```
 
+## Configure Ably LiveSync
+
+This is the point in the tutorial where LiveSync should be configured: after `pnpm db:migrate` and `pnpm db:seed`, but before you rely on browser tabs updating in realtime.
+
+The reason for that ordering is practical. The Ably-hosted Postgres connector does not create this app's tables for you. It expects the required connector objects to already exist in the database it connects to. In this repo, those objects are created by [`db/migrations/001_initial_schema.sql`](db/migrations/001_initial_schema.sql), alongside the app tables and seedable demo schema.
+
+This walkthrough is based on Ably's official Postgres database connector guide: https://ably.com/docs/livesync/postgres.md, checked on 2026-06-02.
+
+### What LiveSync Is Doing In This App
+
+The app uses the transactional outbox pattern described in Ably's guide.
+
+When you click a simulator action in `/control-room`, the backend does not publish directly from React and it does not let the frontend calculate scores. Instead:
+
+1. The simulator request reaches a Netlify Function.
+2. Backend scoring logic updates Postgres inside one transaction.
+3. The same transaction inserts rows into `public.outbox`.
+4. The Ably-hosted Postgres connector reads those outbox rows.
+5. The connector publishes Ably messages to channels such as `league:friends:leaderboard`.
+6. Browser clients subscribed to those channels merge the database-confirmed payload into their UI state.
+
+The important files are:
+
+- [`db/migrations/001_initial_schema.sql`](db/migrations/001_initial_schema.sql): creates `public.nodes`, `public.outbox`, `public.outbox_notify()`, and `public_outbox_trigger` using Ably's connector schema.
+- [`backend/src/db/queries/outbox.js`](backend/src/db/queries/outbox.js): the only helper application code should use to insert LiveSync outbox rows.
+- [`backend/src/scoring/process-match-event.js`](backend/src/scoring/process-match-event.js): processes a simulated match event, updates scores and rankings, then writes the LiveSync messages inside the same transaction.
+- [`backend/src/http/ably-token.js`](backend/src/http/ably-token.js): creates browser-safe Ably token requests from the server-side `ABLY_API_KEY`.
+- [`apps/web/src/api/livesync.js`](apps/web/src/api/livesync.js): creates the browser Ably client using `/api/ably/token`; it never receives the raw Ably API key.
+- [`apps/web/src/App.jsx`](apps/web/src/App.jsx): subscribes to LiveSync channels and merges incoming backend-computed messages into React state.
+
+### Step 1: Confirm The Database Is Ready
+
+Make sure `.env` points at the same internet-reachable Postgres database that Ably will connect to. For the documented path, use Neon:
+
+```env
+DATABASE_URL=postgresql://USER:PASSWORD@HOST/DB?sslmode=require
+```
+
+Run migrations and seed data:
+
+```sh
+pnpm db:migrate
+pnpm db:seed
+```
+
+Then inspect the database:
+
+```sh
+pnpm db:inspect
+```
+
+The output should report these LiveSync objects as `true`:
+
+```json
+{
+  "livesyncObjects": {
+    "outbox": true,
+    "nodes": true,
+    "outboxNotify": true,
+    "publicOutboxTrigger": true
+  }
+}
+```
+
+Do not create these tables manually in the Neon dashboard. The schema source of truth is `db/migrations`. If the inspect command reports a missing object, rerun migrations against the correct `DATABASE_URL` before configuring Ably.
+
+### Step 2: Create The Ably App
+
+In the Ably dashboard, create a new app for this demo or use an existing app dedicated to this fork.
+
+Copy a server-side API key for that Ably app and add it to `.env`:
+
+```env
+ABLY_API_KEY=your-ably-api-key
+```
+
+This key is for Netlify Functions only. The browser uses [`/api/ably/token`](netlify/functions/ably-token.js), which calls [`backend/src/http/ably-token.js`](backend/src/http/ably-token.js) to create a limited token request with subscribe capability for:
+
+```js
+{
+  "league:*": ["subscribe"],
+  "match:*": ["subscribe"]
+}
+```
+
+Do not add `ABLY_API_KEY` to Vite client environment variables and do not expose it in React.
+
+### Step 3: Create The Postgres Integration Rule
+
+In the Ably dashboard for the same app:
+
+1. Open the app's Integrations page.
+2. Choose **New Integration Rule**.
+3. Choose **Postgres**.
+4. Configure the rule to connect to the same database as `DATABASE_URL`.
+
+Use these values for this repo:
+
+| Ably rule field | Value for this app |
+| --- | --- |
+| URL | Your Neon Postgres connection URL. It must point at the same database as `DATABASE_URL`. |
+| Outbox table schema | `public` |
+| Outbox table name | `outbox` |
+| Nodes table schema | `public` |
+| Nodes table name | `nodes` |
+| SSL mode | `require` for the documented Neon setup |
+| Primary site | Choose the Ably site closest to your database or deployment region |
+
+Ably's guide explains that the connector consumes rows from the configured outbox table and publishes them to Ably channels. In this app, each outbox row already contains the channel, event name, and JSON payload that should be delivered to the browser.
+
+For a first local demo, it is acceptable to point the connector at the same Neon connection string you use for `DATABASE_URL`. For a production fork, create a narrower database user for the connector following Ably's privileges section. The connector only needs access to the LiveSync connector objects, not the fantasy app tables.
+
+### Step 4: Understand The Outbox Rows This App Writes
+
+Do not manually insert outbox rows while following the demo. The backend writes them when simulator events are processed.
+
+The insert helper in [`backend/src/db/queries/outbox.js`](backend/src/db/queries/outbox.js) only sets application-owned fields:
+
+- `mutation_id`
+- `channel`
+- `name`
+- `rejected`
+- `data`
+- `headers`
+
+It intentionally does not set connector-owned fields such as `sequence_id`, `locked_by`, `lock_expiry`, or `processed`.
+
+For one simulator event, [`backend/src/scoring/process-match-event.js`](backend/src/scoring/process-match-event.js) writes messages like these:
+
+| Channel | Event name | Used by |
+| --- | --- | --- |
+| `league:friends:leaderboard` | `leaderboard.updated` | `/league/friends`, `/tv/friends` |
+| `league:friends:activity` | `activity.created` | `/league/friends`, `/client/stephanos` |
+| `league:friends:teams` | `team.updated` | `/client/stephanos` |
+| `match:france-england` | `match.updated` | match-aware views and diagnostics |
+
+If you fork the app and rename channels or event names, update the backend outbox writes, frontend subscriptions, token capabilities, tests, and docs together. The main places to check are [`backend/src/scoring/process-match-event.js`](backend/src/scoring/process-match-event.js), [`backend/src/http/ably-token.js`](backend/src/http/ably-token.js), and [`apps/web/src/App.jsx`](apps/web/src/App.jsx).
+
+### Step 5: Start The App And Verify Delivery
+
+Start Netlify dev:
+
+```sh
+pnpm dev
+```
+
+Open these routes in separate tabs:
+
+```text
+/debug
+/control-room
+/league/friends
+/client/stephanos
+/tv/friends
+```
+
+On `/debug`, confirm:
+
+- `/api/config` reports `database.configured=true`.
+- `/api/config` reports `ably.configured=true`.
+- A live view can request `/api/ably/token`.
+- The LiveSync status eventually shows a connected or subscribed state.
+
+Then trigger `Mbappé goal` in `/control-room`.
+
+Expected result:
+
+- The simulator response includes `outboxMessages`.
+- `/league/friends` updates without refresh.
+- `/client/stephanos` updates without refresh if the event affects that manager's team.
+- `/tv/friends` updates without refresh.
+- The Ably dashboard shows messages on channels such as `league:friends:leaderboard` or `league:friends:teams`.
+
+Ably's connector may process and remove outbox rows quickly. That is expected. Do not rely on `public.outbox` retaining every historical message. Use the simulator response, `/debug`, browser dev tools, and the Ably dashboard to confirm delivery.
+
+### Step 6: If LiveSync Does Not Work
+
+Check these in order:
+
+1. `pnpm db:inspect` must show all LiveSync objects as present.
+2. The Ably Postgres rule must point to the same Neon database as `DATABASE_URL`.
+3. The Ably rule must use `public.outbox` and `public.nodes`.
+4. `ABLY_API_KEY` must belong to the same Ably app that owns the Postgres integration rule.
+5. `/api/config` must report both database and Ably as configured.
+6. `/api/ably/token` must return a token request, not a 503.
+7. The browser console should not show `LiveSync setup error`.
+8. The frontend must be open on a route that subscribes to the channel you expect to test.
+
+The app has no HTTP-only fallback and does not use polling to fake realtime updates. If browser tabs only update after refresh, the initial HTTP reads are working but LiveSync delivery is not.
+
 ## What Each Page Does
 
 | Route | Real-world equivalent | Initial data | LiveSync channels | Expected update |
