@@ -246,6 +246,9 @@ function AppHeader({ mode, onModeChange }) {
       color="inherit"
       elevation={0}
       sx={{
+        "@media (max-width:279.95px)": {
+          display: "none"
+        },
         borderBottom: 1,
         borderColor: "divider",
         bgcolor: "background.paper"
@@ -724,7 +727,7 @@ function LeaguePage() {
     <Stack spacing={3}>
       <PageHeading
         title="Leaderboard"
-        description="Realtime fantasy league table every participant can watch. Updates arrive in real time through Ably LiveSync connected to a central postgres db."
+        description="Realtime fantasy leaderboard every participant can watch. Updates via Ably LiveSync."
       />
 
       <Grid container spacing={2}>
