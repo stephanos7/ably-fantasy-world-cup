@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
   AppBar,
@@ -30,6 +30,7 @@ import {
   Typography,
   createTheme
 } from "@mui/material";
+import { alpha, keyframes } from "@mui/material/styles";
 import {
   Link as RouterLink,
   NavLink,
@@ -54,6 +55,44 @@ import { createLiveSyncClient } from "./api/livesync.js";
 const demoLeagueSlug = "friends";
 const demoUserSlug = "stephanos";
 const demoMatchSlug = "france-england";
+const updatedResultDurationMs = 1200;
+
+const updatedResultPulse = keyframes`
+  0% {
+    transform: scale(1);
+    background-color: transparent;
+    box-shadow: 0 0 0 0 transparent;
+  }
+
+  18% {
+    transform: scale(1.04);
+    background-color: var(--updated-result-fill);
+    box-shadow: 0 0 0 6px var(--updated-result-shadow);
+  }
+
+  100% {
+    transform: scale(1);
+    background-color: transparent;
+    box-shadow: 0 0 0 0 transparent;
+  }
+`;
+
+const updatedRowFlash = keyframes`
+  0% {
+    background-color: transparent;
+    box-shadow: inset 0 0 0 0 transparent;
+  }
+
+  18% {
+    background-color: var(--updated-result-row-fill);
+    box-shadow: inset 4px 0 0 0 var(--updated-result-accent);
+  }
+
+  100% {
+    background-color: transparent;
+    box-shadow: inset 0 0 0 0 transparent;
+  }
+`;
 
 const navItems = [
   { label: "Launcher", to: "/" },
@@ -1312,21 +1351,32 @@ function LeaderboardTable({ entries }) {
         </TableHead>
         <TableBody>
           {entries.map((entry) => (
-            <TableRow key={entry.teamSlug}>
-              <TableCell>{entry.rank}</TableCell>
-              <TableCell>{entry.teamName}</TableCell>
-              <TableCell>
-                {entry.managerName || entry.managerSlug || "Unassigned"}
-              </TableCell>
-              <TableCell align="right">{entry.points}</TableCell>
-              <TableCell sx={{ display: { xs: "none", sm: "table-cell" } }}>
-                {formatDateTime(entry.updatedAt)}
-              </TableCell>
-            </TableRow>
+            <LeaderboardTableRow key={entry.teamSlug} entry={entry} />
           ))}
         </TableBody>
       </Table>
     </TableContainer>
+  );
+}
+
+function LeaderboardTableRow({ entry }) {
+  const isRowUpdated = useTimedChangeFlag(`${entry.rank}:${entry.points}`);
+  const arePointsUpdated = useTimedChangeFlag(entry.points);
+
+  return (
+    <TableRow sx={getUpdatedResultRowSx(isRowUpdated)}>
+      <TableCell>{entry.rank}</TableCell>
+      <TableCell>{entry.teamName}</TableCell>
+      <TableCell>{entry.managerName || entry.managerSlug || "Unassigned"}</TableCell>
+      <TableCell align="right">
+        <Box component="span" sx={getUpdatedResultValueSx(arePointsUpdated)}>
+          {entry.points}
+        </Box>
+      </TableCell>
+      <TableCell sx={{ display: { xs: "none", sm: "table-cell" } }}>
+        {formatDateTime(entry.updatedAt)}
+      </TableCell>
+    </TableRow>
   );
 }
 
@@ -1406,8 +1456,15 @@ function AffectedTeams({ teams }) {
 }
 
 function StatChip({ label, value }) {
+  const isUpdated = useTimedChangeFlag(value);
+
   return (
-    <Chip label={`${label}: ${value}`} color="primary" variant="outlined" />
+    <Chip
+      label={`${label}: ${value}`}
+      color="primary"
+      variant="outlined"
+      sx={getUpdatedResultChipSx(isUpdated)}
+    />
   );
 }
 
@@ -1533,6 +1590,115 @@ function CodeBlock({ value }) {
       {JSON.stringify(value, null, 2)}
     </Box>
   );
+}
+
+function useTimedChangeFlag(value, durationMs = updatedResultDurationMs) {
+  const [isActive, setIsActive] = useState(false);
+  const previousValueRef = useRef(value);
+  const timeoutRef = useRef(null);
+
+  useEffect(() => {
+    if (previousValueRef.current === value) {
+      return;
+    }
+
+    previousValueRef.current = value;
+    setIsActive(true);
+    window.clearTimeout(timeoutRef.current);
+    timeoutRef.current = window.setTimeout(() => {
+      setIsActive(false);
+    }, durationMs);
+  }, [durationMs, value]);
+
+  useEffect(() => {
+    return () => {
+      window.clearTimeout(timeoutRef.current);
+    };
+  }, []);
+
+  return isActive;
+}
+
+function getUpdatedResultVars(theme) {
+  return {
+    "--updated-result-accent": alpha(theme.palette.primary.main, 0.75),
+    "--updated-result-fill": alpha(theme.palette.primary.main, 0.12),
+    "--updated-result-row-fill": alpha(theme.palette.primary.main, 0.08),
+    "--updated-result-shadow": alpha(theme.palette.primary.main, 0.18)
+  };
+}
+
+function getUpdatedResultValueSx(isActive) {
+  return (theme) => ({
+    ...getUpdatedResultVars(theme),
+    borderRadius: 1.5,
+    display: "inline-flex",
+    fontVariantNumeric: "tabular-nums",
+    justifyContent: "flex-end",
+    minWidth: "3.5ch",
+    px: 1,
+    py: 0.375,
+    transition: theme.transitions.create(["background-color", "box-shadow"], {
+      duration: theme.transitions.duration.shorter
+    }),
+    ...(isActive
+      ? {
+          animation: `${updatedResultPulse} ${updatedResultDurationMs}ms cubic-bezier(0.22, 1, 0.36, 1)`,
+          transformOrigin: "center",
+          "@media (prefers-reduced-motion: reduce)": {
+            animation: "none",
+            backgroundColor: "var(--updated-result-fill)",
+            boxShadow: "0 0 0 1px var(--updated-result-accent)"
+          }
+        }
+      : null)
+  });
+}
+
+function getUpdatedResultRowSx(isActive) {
+  return (theme) => ({
+    ...getUpdatedResultVars(theme),
+    transition: theme.transitions.create(["background-color", "box-shadow"], {
+      duration: theme.transitions.duration.shorter
+    }),
+    ...(isActive
+      ? {
+          animation: `${updatedRowFlash} ${updatedResultDurationMs}ms ease-out`,
+          "@media (prefers-reduced-motion: reduce)": {
+            animation: "none",
+            backgroundColor: "var(--updated-result-row-fill)",
+            boxShadow: "inset 4px 0 0 0 var(--updated-result-accent)"
+          }
+        }
+      : null)
+  });
+}
+
+function getUpdatedResultChipSx(isActive) {
+  return (theme) => ({
+    ...getUpdatedResultVars(theme),
+    fontWeight: 500,
+    ".MuiChip-label": {
+      fontVariantNumeric: "tabular-nums"
+    },
+    transition: theme.transitions.create(
+      ["background-color", "box-shadow", "transform"],
+      {
+        duration: theme.transitions.duration.shorter
+      }
+    ),
+    ...(isActive
+      ? {
+          animation: `${updatedResultPulse} ${updatedResultDurationMs}ms cubic-bezier(0.22, 1, 0.36, 1)`,
+          boxShadow: "0 0 0 1px var(--updated-result-accent)",
+          transformOrigin: "center",
+          "@media (prefers-reduced-motion: reduce)": {
+            animation: "none",
+            backgroundColor: "var(--updated-result-fill)"
+          }
+        }
+      : null)
+  });
 }
 
 function PageHeading({ eyebrow, title, description, titleSx }) {
