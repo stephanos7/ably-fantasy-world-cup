@@ -550,12 +550,12 @@ function ControlRoomPage() {
     <Stack spacing={3}>
       <PageHeading
         eyebrow="Control room"
-        title="France 🇫🇷 VS England 🏴󠁧󠁢󠁥󠁮󠁧󠁿"
+        title="France 🇫🇷 vs England 🏴󠁧󠁢󠁥󠁮󠁧󠁿"
         titleSx={{
           "@media (max-width:298.95px)": {
-            fontSize: "1.1rem",
-            lineHeight: 1.1,
-            fontWeight: 800,
+            fontSize: "0.9rem",
+            lineHeight: 1,
+            fontWeight: 700,
             letterSpacing: "-0.02em"
           }
         }}
