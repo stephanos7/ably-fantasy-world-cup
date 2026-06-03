@@ -1,11 +1,11 @@
 # Setup Ably LiveSync
 
-The Ably-hosted Postgres connector must read from the same Neon database that Netlify Functions write to through `DATABASE_URL`.
+The Ably-hosted Postgres connector must read from the same direct Neon database that Netlify Functions write to through `DATABASE_URL`.
 
 ## Order
 
 1. Create the Neon database.
-2. Set `DATABASE_URL` locally and in Netlify.
+2. Set `DATABASE_URL` locally and in Netlify using the direct Neon host, not the Neon `-pooler` host and do not enable connection pooler.
 3. Run migrations.
 
 ```sh
@@ -32,7 +32,7 @@ Required connector objects:
 - `public_outbox_trigger`
 
 6. Create an Ably app and set a server-side Ably key as `ABLY_API_KEY`.
-7. Configure the Ably-hosted Postgres connector against the same Neon database.
+7. Configure the Ably-hosted Postgres connector against the same direct Neon database. Do not use the Neon `-pooler` host for the connector URL.
 8. Run `pnpm dev` locally or deploy the Netlify site.
 9. Trigger a simulator event and confirm browser clients receive updates through Ably.
 

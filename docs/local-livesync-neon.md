@@ -18,11 +18,13 @@ Neon is documented because it provides an internet-reachable Postgres database. 
 ## Setup
 
 1. Create a Neon database.
-2. Set `DATABASE_URL` to the Neon connection string.
+2. Set `DATABASE_URL` to the direct Neon connection string .
 
 ```env
 DATABASE_URL=postgresql://USER:PASSWORD@HOST/DB?sslmode=require
 ```
+
+Do not use the Neon `-pooler` hostname for this app's `DATABASE_URL`. Use the direct Neon host so the app runtime, migrations, seed scripts, and Ably-hosted connector all target the same database path.
 
 3. Run migrations. This creates the app tables and the LiveSync connector objects.
 
@@ -48,7 +50,7 @@ pnpm db:inspect
 ABLY_API_KEY=your-ably-api-key
 ```
 
-7. Configure the Ably-hosted Postgres connector against the same Neon database used by Netlify Functions.
+7. Configure the Ably-hosted Postgres connector against the same direct Neon database used by Netlify Functions. Do not point the connector at the Neon `-pooler` host.
 
 The connector expects these objects to already exist:
 

@@ -17,7 +17,7 @@ HTTP is used for initial reads and simulator actions only. Realtime updates are 
 
 ## Quick Start
 
-1. Create a Neon database and copy its Postgres connection string with `sslmode=require`.
+1. Create a Neon database and copy its direct Postgres connection string with `sslmode=require` (do NOT use connection pooler).
 2. Copy `.env.example` to `.env` and set `DATABASE_URL`.
 3. Run `pnpm db:migrate`.
 4. Run `pnpm db:seed`.
@@ -87,6 +87,8 @@ Make sure `.env` points at the same internet-reachable Postgres database that Ab
 DATABASE_URL=postgresql://USER:PASSWORD@HOST/DB?sslmode=require
 ```
 
+Do not use the Neon `-pooler` host for this app's `DATABASE_URL` or for the Ably-hosted connector. Use the direct Neon host so Netlify Functions, migrations, seed scripts, and the connector all target the same database path.
+
 Run migrations and seed data:
 
 ```sh
@@ -147,19 +149,19 @@ In the Ably dashboard for the same app:
 
 Use these values for this repo:
 
-| Ably rule field | Value for this app |
-| --- | --- |
-| URL | Your Neon Postgres connection URL. It must point at the same database as `DATABASE_URL`. |
-| Outbox table schema | `public` |
-| Outbox table name | `outbox` |
-| Nodes table schema | `public` |
-| Nodes table name | `nodes` |
-| SSL mode | `require` for the documented Neon setup |
-| Primary site | Choose the Ably site closest to your database or deployment region |
+| Ably rule field     | Value for this app                                                                                                                       |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| URL                 | Your direct Neon Postgres connection URL. It must point at the same database as `DATABASE_URL`. Do not use the Neon `-pooler` host here. |
+| Outbox table schema | `public`                                                                                                                                 |
+| Outbox table name   | `outbox`                                                                                                                                 |
+| Nodes table schema  | `public`                                                                                                                                 |
+| Nodes table name    | `nodes`                                                                                                                                  |
+| SSL mode            | `require` for the documented Neon setup                                                                                                  |
+| Primary site        | Choose the Ably site closest to your database or deployment region                                                                       |
 
 Ably's guide explains that the connector consumes rows from the configured outbox table and publishes them to Ably channels. In this app, each outbox row already contains the channel, event name, and JSON payload that should be delivered to the browser.
 
-For a first local demo, it is acceptable to point the connector at the same Neon connection string you use for `DATABASE_URL`. For a production fork, create a narrower database user for the connector following Ably's privileges section. The connector only needs access to the LiveSync connector objects, not the fantasy app tables.
+For a first local demo, it is acceptable to point the connector at the same direct Neon connection string you use for `DATABASE_URL`. For a production fork, create a narrower database user for the connector following Ably's privileges section. The connector only needs access to the LiveSync connector objects, not the fantasy app tables.
 
 ### Step 4: Understand The Outbox Rows This App Writes
 
@@ -178,12 +180,12 @@ It intentionally does not set connector-owned fields such as `sequence_id`, `loc
 
 For one simulator event, [`backend/src/scoring/process-match-event.js`](backend/src/scoring/process-match-event.js) writes messages like these:
 
-| Channel | Event name | Used by |
-| --- | --- | --- |
-| `league:friends:leaderboard` | `leaderboard.updated` | `/league/friends`, `/tv/friends` |
-| `league:friends:activity` | `activity.created` | `/league/friends`, `/client/stephanos` |
-| `league:friends:teams` | `team.updated` | `/client/stephanos` |
-| `match:france-england` | `match.updated` | match-aware views and diagnostics |
+| Channel                      | Event name            | Used by                                |
+| ---------------------------- | --------------------- | -------------------------------------- |
+| `league:friends:leaderboard` | `leaderboard.updated` | `/league/friends`, `/tv/friends`       |
+| `league:friends:activity`    | `activity.created`    | `/league/friends`, `/client/stephanos` |
+| `league:friends:teams`       | `team.updated`        | `/client/stephanos`                    |
+| `match:france-england`       | `match.updated`       | match-aware views and diagnostics      |
 
 If you fork the app and rename channels or event names, update the backend outbox writes, frontend subscriptions, token capabilities, tests, and docs together. The main places to check are [`backend/src/scoring/process-match-event.js`](backend/src/scoring/process-match-event.js), [`backend/src/http/ably-token.js`](backend/src/http/ably-token.js), and [`apps/web/src/App.jsx`](apps/web/src/App.jsx).
 
@@ -229,7 +231,7 @@ Ably's connector may process and remove outbox rows quickly. That is expected. D
 Check these in order:
 
 1. `pnpm db:inspect` must show all LiveSync objects as present.
-2. The Ably Postgres rule must point to the same Neon database as `DATABASE_URL`.
+2. The Ably Postgres rule must point to the same direct Neon database as `DATABASE_URL`, not the Neon `-pooler` host.
 3. The Ably rule must use `public.outbox` and `public.nodes`.
 4. `ABLY_API_KEY` must belong to the same Ably app that owns the Postgres integration rule.
 5. `/api/config` must report both database and Ably as configured.
@@ -241,14 +243,14 @@ The app has no HTTP-only fallback and does not use polling to fake realtime upda
 
 ## What Each Page Does
 
-| Route | Real-world equivalent | Initial data | LiveSync channels | Expected update |
-| --- | --- | --- | --- | --- |
-| `/` | Demo launcher | none | none | Guides the demo flow |
-| `/control-room` | Upstream match feed or event operator | match summary, activity summary | optional debug-only reads | Sends simulator events |
-| `/league/friends` | Shared league table | leaderboard, activity | `league:friends:leaderboard`, `league:friends:activity` | Standings and activity update |
-| `/client/stephanos` | Individual manager view | team, squad, activity | `league:friends:teams`, `league:friends:activity` | Points, rank, squad, and activity update for matching `userSlug` |
-| `/tv/friends` | Public display or TV scoreboard | leaderboard | `league:friends:leaderboard` | Read-only leaderboard update |
-| `/debug` | Developer diagnostics | config, health | debug subscriptions only | Shows setup status and last message |
+| Route               | Real-world equivalent                 | Initial data                    | LiveSync channels                                       | Expected update                                                  |
+| ------------------- | ------------------------------------- | ------------------------------- | ------------------------------------------------------- | ---------------------------------------------------------------- |
+| `/`                 | Demo launcher                         | none                            | none                                                    | Guides the demo flow                                             |
+| `/control-room`     | Upstream match feed or event operator | match summary, activity summary | optional debug-only reads                               | Sends simulator events                                           |
+| `/league/friends`   | Shared league table                   | leaderboard, activity           | `league:friends:leaderboard`, `league:friends:activity` | Standings and activity update                                    |
+| `/client/stephanos` | Individual manager view               | team, squad, activity           | `league:friends:teams`, `league:friends:activity`       | Points, rank, squad, and activity update for matching `userSlug` |
+| `/tv/friends`       | Public display or TV scoreboard       | leaderboard                     | `league:friends:leaderboard`                            | Read-only leaderboard update                                     |
+| `/debug`            | Developer diagnostics                 | config, health                  | debug subscriptions only                                | Shows setup status and last message                              |
 
 ## Required Runtime Path
 

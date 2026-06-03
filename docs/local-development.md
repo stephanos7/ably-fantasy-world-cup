@@ -7,7 +7,7 @@ Docker Postgres is not a supported app path. The Ably-hosted connector must read
 ## Setup
 
 1. Create a Neon project and database.
-2. Copy the Neon Postgres connection string and include `sslmode=require`.
+2. Copy the direct Neon Postgres connection string (do NOT use connection pooler) and include `sslmode=require`.
 3. Copy the example environment file.
 
 ```sh
@@ -20,6 +20,8 @@ cp .env.example .env
 DATABASE_URL=postgresql://USER:PASSWORD@HOST/DB?sslmode=require
 ABLY_API_KEY=your-ably-api-key
 ```
+
+Do not use the Neon `-pooler` host for this app's `DATABASE_URL`. Use the direct Neon host for local dev, migrations, seed scripts, and the Ably-hosted connector.
 
 Netlify dev normally injects variables from the root `.env` file. If your local
 shell or Netlify CLI version does not load them reliably, export the file before
@@ -45,7 +47,7 @@ pnpm db:migrate
 pnpm db:seed
 ```
 
-7. Configure the Ably-hosted Postgres connector against the same Neon database in `DATABASE_URL`.
+7. Configure the Ably-hosted Postgres connector against the same direct Neon database in `DATABASE_URL`. Do not use the Neon `-pooler` host.
 
 8. Start Netlify dev.
 
@@ -57,13 +59,13 @@ pnpm dev
 
 Open the local Netlify dev URL and use these routes in separate tabs:
 
-| Route | Purpose |
-| --- | --- |
-| `/control-room` | Trigger seeded France vs England simulator events. |
-| `/league/friends` | View backend-ranked league standings and activity. |
+| Route               | Purpose                                                        |
+| ------------------- | -------------------------------------------------------------- |
+| `/control-room`     | Trigger seeded France vs England simulator events.             |
+| `/league/friends`   | View backend-ranked league standings and activity.             |
 | `/client/stephanos` | View one seeded user's team, squad, rank, score, and activity. |
-| `/tv/friends` | View a larger read-only leaderboard. |
-| `/debug` | Check Netlify Function, Neon, and Ably LiveSync configuration. |
+| `/tv/friends`       | View a larger read-only leaderboard.                           |
+| `/debug`            | Check Netlify Function, Neon, and Ably LiveSync configuration. |
 
 Click `Mbappé goal` in `/control-room`. The league, client, and TV tabs should update without refresh when the connector is reading outbox rows from the same Neon database.
 

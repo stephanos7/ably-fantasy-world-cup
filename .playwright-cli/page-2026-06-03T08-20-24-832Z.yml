@@ -1,0 +1,69 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - link "Ably Fantasy World Cup" [ref=e6] [cursor=pointer]:
+        - /url: /
+      - navigation [ref=e7]:
+        - link "Launcher" [ref=e8] [cursor=pointer]:
+          - /url: /
+        - link "Control Room" [ref=e9] [cursor=pointer]:
+          - /url: /control-room
+        - link "Client" [ref=e10] [cursor=pointer]:
+          - /url: /client/stephanos
+        - link "League" [ref=e11] [cursor=pointer]:
+          - /url: /league/friends
+        - link "TV" [ref=e12] [cursor=pointer]:
+          - /url: /tv/friends
+        - link "Debug" [ref=e13] [cursor=pointer]:
+          - /url: /debug
+      - generic [ref=e14] [cursor=pointer]:
+        - switch "Light" [ref=e17]
+        - generic [ref=e20]: Light
+  - main [ref=e21]:
+    - generic [ref=e22]:
+      - generic [ref=e23]:
+        - heading "Runtime diagnostics" [level=1] [ref=e24]
+        - paragraph [ref=e25]: Use this page to verify the Netlify Function, Neon database, and Ably LiveSync setup.
+      - generic [ref=e26]:
+        - generic [ref=e30]:
+          - heading "Netlify Functions" [level=2] [ref=e31]
+          - generic [ref=e32]:
+            - paragraph [ref=e33]: Function base URL
+            - generic [ref=e35]: same origin
+          - generic [ref=e36]:
+            - progressbar [ref=e37]:
+              - img [ref=e38]
+            - paragraph [ref=e40]: Loading...
+          - paragraph [ref=e41]: "Confirm `GET /api/config` works and reports both database and Ably as configured."
+          - generic [ref=e42]:
+            - progressbar [ref=e43]:
+              - img [ref=e44]
+            - paragraph [ref=e46]: Loading...
+          - paragraph [ref=e47]: "Confirm `GET /api/ably/token` works by opening a live view and checking that the browser receives an Ably token request."
+        - generic [ref=e51]:
+          - heading "What to check" [level=2] [ref=e52]
+          - list [ref=e53]:
+            - listitem [ref=e54]:
+              - generic [ref=e55]:
+                - generic [ref=e56]: /api/config works
+                - paragraph [ref=e57]: The response should show databaseConfigured=true and ablyConfigured=true.
+            - listitem [ref=e58]:
+              - generic [ref=e59]:
+                - generic [ref=e60]: /api/ably/token works
+                - paragraph [ref=e61]: Open a live view and confirm the browser can request an Ably token.
+            - listitem [ref=e62]:
+              - generic [ref=e63]:
+                - generic [ref=e64]: LiveSync connected
+                - paragraph [ref=e65]: No connection state observed yet.
+            - listitem [ref=e66]:
+              - generic [ref=e67]:
+                - generic [ref=e68]: Last received channel and message
+                - paragraph [ref=e69]: No LiveSync message has been received in this tab yet.
+            - listitem [ref=e70]:
+              - generic [ref=e71]:
+                - generic [ref=e72]: Expected subscribed channels
+                - paragraph [ref=e73]: Expected demo channels include league:friends:leaderboard, league:friends:activity, league:friends:teams, and match:france-england.
+        - generic [ref=e77]:
+          - heading "LiveSync debug" [level=2] [ref=e78]
+          - paragraph [ref=e79]: Check the last received message, the subscribed channels, and the current connection state after opening one of the live views.
+          - paragraph [ref=e80]: No LiveSync messages have been observed in this tab.

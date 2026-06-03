@@ -1,6 +1,6 @@
 # Troubleshooting
 
-These checks assume `DATABASE_URL` points to the same Neon database used by Netlify Functions and the Ably-hosted Postgres connector.
+These checks assume `DATABASE_URL` points to the same direct Neon database used by Netlify Functions and the Ably-hosted Postgres connector, not the Neon `-pooler` host.
 
 ## Neon Has Schema
 
@@ -98,7 +98,7 @@ Check these items in order:
 5. Confirm the frontend is subscribed to `league:friends:leaderboard` on League and TV.
 6. Confirm the frontend is subscribed to `league:friends:teams` and `league:friends:activity` on Client.
 7. Confirm the Client page filters `team.updated` by payload `userSlug`.
-8. Confirm the Ably connector is configured against the same Neon database as `DATABASE_URL`.
+8. Confirm the Ably connector is configured against the same direct Neon database as `DATABASE_URL`, not the Neon `-pooler` host.
 9. Confirm `ABLY_API_KEY` belongs to the same Ably app as the connector.
 
 ## Netlify Route Params Are Wrong
@@ -124,7 +124,7 @@ In DevTools:
 - Network should show Ably WebSocket traffic.
 - The UI should show `LiveSync connected`.
 
-If the UI shows a setup error, confirm `ABLY_API_KEY` is set for Netlify Functions and the connector points to the same Neon database as `DATABASE_URL`.
+If the UI shows a setup error, confirm `ABLY_API_KEY` is set for Netlify Functions and the connector points to the same direct Neon database as `DATABASE_URL`, not the Neon `-pooler` host.
 
 Under `netlify dev`, `/api/config` should report `databaseConfigured=true` and `ablyConfigured=true`. If either value is false despite a populated root `.env`, start dev with exported environment variables:
 

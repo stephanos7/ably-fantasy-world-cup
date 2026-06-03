@@ -20,11 +20,11 @@ The frontend does not require `VITE_API_BASE_URL` by default. Same-origin `/api/
 ## Steps
 
 1. Create the Neon database.
-2. Set `DATABASE_URL` locally.
+2. Set `DATABASE_URL` locally using the direct Neon host, not the Neon `-pooler` host.
 3. Run `pnpm db:migrate`.
 4. Run `pnpm db:seed`.
 5. Create an Ably app.
-6. Configure the Ably-hosted LiveSync Postgres connector against the same Neon database.
+6. Configure the Ably-hosted LiveSync Postgres connector against the same direct Neon database. Do not use the Neon `-pooler` host for the connector URL.
 7. Set `DATABASE_URL` and `ABLY_API_KEY` in Netlify environment variables.
 8. Deploy the Netlify site.
 9. Trigger a simulator event and verify LiveSync updates in multiple browser windows.
